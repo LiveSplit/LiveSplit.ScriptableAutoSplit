@@ -35,20 +35,34 @@ namespace LiveSplit.UI.Components
         public float PaddingLeft { get { return 0; } }
         public float PaddingRight { get { return 0; } }
 
+        protected String OldScriptPath { get; set; }
+
         public bool Refresh { get; set; }
 
         public IDictionary<string, Action> ContextMenuControls { get; protected set; }
 
         public ASLScript Script { get; set; }
 
+        public Component(String scriptPath)
+        {
+            Settings = new ComponentSettings()
+            {
+                ScriptPath = scriptPath
+            };
+        }
+
         public Component()
         {
             Settings = new ComponentSettings();
-            Script = ASLParser.Parse(File.ReadAllText(@"D:\SuperMario64.txt"));
         }
 
         public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
+            if (Settings.ScriptPath != OldScriptPath)
+            {
+                Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+                OldScriptPath = Settings.ScriptPath;
+            }
             Script.Update(state);
         }
 
@@ -82,19 +96,24 @@ namespace LiveSplit.UI.Components
 
         public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document)
         {
-            return document.CreateElement("x");
+            return Settings.GetSettings(document);
         }
 
         public System.Windows.Forms.Control GetSettingsControl(UI.LayoutMode mode)
         {
-            return null;
+            return Settings;
         }
 
         public void SetSettings(System.Xml.XmlNode settings)
         {
+            Settings.SetSettings(settings);
         }
 
         public void RenameComparison(string oldName, string newName)
+        {
+        }
+
+        public void Dispose()
         {
         }
     }

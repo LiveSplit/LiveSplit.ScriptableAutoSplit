@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Google Drive\Projekte\LiveSplit\LiveSplit\bin\Debug\Components\</OutputPath>
+    <OutputPath>..\..\bin\Debug\Components\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,19 +26,25 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\bin\Release\Components\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release Candidate|AnyCPU'">
+    <OutputPath>..\..\bin\Release Candidate\Components\</OutputPath>
+    <DefineConstants>TRACE;RELEASE_CANDIDATE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>ManagedMinimumRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Irony">
-      <HintPath>..\..\..\..\Downloads\Irony_2013_12_12\Irony_2013_12_12\Irony.Interpreter\bin\Debug\Irony.dll</HintPath>
-    </Reference>
-    <Reference Include="LiveSplit.Core">
-      <HintPath>..\..\..\..\Google Drive\Projekte\LiveSplit\LiveSplit\bin\Release\LiveSplit.Core.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\Libs\Irony_2013_12_12\Irony_2013_12_12\Irony.Interpreter\bin\Debug\Irony.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -50,12 +56,11 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UpdateManager">
-      <HintPath>..\..\..\..\Google Drive\Projekte\LiveSplit\LiveSplit\bin\Release\UpdateManager.dll</HintPath>
+      <HintPath>..\..\bin\Debug\UpdateManager.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="WinFormsColor">
-      <HintPath>..\..\..\..\Google Drive\Projekte\LiveSplit\LiveSplit\bin\Release\WinFormsColor.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\..\..\..\Dropbox\workspace\LiveSplit\Libs\WinForms Color Picker\WinFormsColor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -81,7 +86,13 @@
       <DependentUpon>ComponentSettings.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\LiveSplit.Core\LiveSplit.Core.csproj">
+      <Project>{6de847db-20a3-4848-aeee-1b4364aecdfb}</Project>
+      <Name>LiveSplit.Core</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

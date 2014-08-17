@@ -76,9 +76,9 @@ namespace LiveSplit.ASL
                         Model.Split();
                     }
 
-                    var isLoading = IsLoading.Run(lsState, OldState, State);
-                    if (isLoading != null)
-                        lsState.IsLoading = isLoading;
+                    var isPaused = IsLoading.Run(lsState, OldState, State);
+                    if (isPaused != null)
+                        lsState.IsGameTimePaused = isPaused;
 
                     var gameTime = GameTime.Run(lsState, OldState, State);
                     if (gameTime != null)

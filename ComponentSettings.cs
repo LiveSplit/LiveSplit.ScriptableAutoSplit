@@ -7,99 +7,59 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using WinFormsColor;
+using System.Xml;
 
 namespace LiveSplit.UI.Components
 {
     public partial class ComponentSettings : UserControl
     {
-        public Point? PointTop { get; set; }
-        public Point? PointBottom { get; set; }
+        public String ScriptPath { get; set; }
 
         public ComponentSettings()
         {
             InitializeComponent();
-            PointTop = new Point(100, 100);
-            PointBottom = new Point(400, 400);
-        }
 
-        String PointToString(Point? point)
-        {
-            if (point.HasValue)
-            {
-                return point.Value.X + "|" + point.Value.Y;
-            }
-            return String.Empty;
-        }
+            ScriptPath = "";
 
-        Point? PointFromString(String pointString)
-        {
-            if (pointString == String.Empty)
-                return null;
-
-            var splits = pointString.Split('|');
-            return new Point(Int32.Parse(splits[0]), Int32.Parse(splits[1]));
+            txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false, DataSourceUpdateMode.OnPropertyChanged);
         }
 
         public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document)
         {
             var settingsNode = document.CreateElement("Settings");
-
-            var node = document.CreateElement("PointTop");
-            node.InnerText = PointToString(PointTop);
-            settingsNode.AppendChild(node);
-
-            node = document.CreateElement("PointBottom");
-            node.InnerText = PointToString(PointBottom);
-            settingsNode.AppendChild(node);
-
+            settingsNode.AppendChild(ToElement(document, "Version", "1.4"));
+            settingsNode.AppendChild(ToElement(document, "ScriptPath", ScriptPath));
             return settingsNode;
         }
 
         public void SetSettings(System.Xml.XmlNode settings)
         {
-            PointTop = PointFromString(settings["PointTop"].InnerText);
-            PointBottom = PointFromString(settings["PointBottom"].InnerText);
-        }
-        private void btnTop_MouseDown(object sender, MouseEventArgs e)
-        {
-            MouseHook.Start();
-            bool pick = true;
-            //Cursor = new Cursor(Resources.ColorpickerCursor.GetHicon());
-            MouseHook.MouseAction += (s, x) =>
-            {
-                MouseHook.stop();
-                pick = false;
-                Cursor = Cursors.Default;
-            };
-            new System.Threading.Thread(() =>
-            {
-                while (pick)
-                {
-                    PointTop = Cursor.Position;
-                    System.Threading.Thread.Sleep(10);
-                }
-            }).Start();
+            var element = (XmlElement)settings;
+            Version version;
+            if (element["Version"] != null)
+                version = Version.Parse(element["Version"].InnerText);
+            else
+                version = new Version(1, 0, 0, 0);
+            ScriptPath = element["ScriptPath"].InnerText;
         }
 
-        private void btnBottom_MouseDown(object sender, MouseEventArgs e)
+        private XmlElement ToElement<T>(XmlDocument document, String name, T value)
         {
-            MouseHook.Start();
-            bool pick = true;
-            //Cursor = new Cursor(Resources.ColorpickerCursor.GetHicon());
-            MouseHook.MouseAction += (s, x) =>
+            var element = document.CreateElement(name);
+            element.InnerText = value.ToString();
+            return element;
+        }
+
+        private void btnSelectFile_Click(object sender, EventArgs e)
+        {
+            var dialog = new OpenFileDialog()
             {
-                MouseHook.stop();
-                pick = false;
-                Cursor = Cursors.Default;
+                FileName = ScriptPath,
+                Filter = "Auto Split Script (*.asl)|*.asl|All Files (*.*)|*.*"
             };
-            new System.Threading.Thread(() =>
-            {
-                while (pick)
-                {
-                    PointBottom = Cursor.Position;
-                    System.Threading.Thread.Sleep(10);
-                }
-            }).Start();
+            var result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+                ScriptPath = txtScriptPath.Text = dialog.FileName;
         }
     }
 }

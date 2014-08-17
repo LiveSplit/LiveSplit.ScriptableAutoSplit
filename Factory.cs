@@ -21,6 +21,11 @@ namespace LiveSplit.UI.Components
             return new Component();
         }
 
+        public IComponent Create(LiveSplitState state, String script)
+        {
+            return new Component(script);
+        }
+
         public string UpdateName
         {
             get { return ComponentName; }
@@ -45,6 +50,16 @@ namespace LiveSplit.UI.Components
         public Version Version
         {
             get { return Version.Parse("1.0.0"); }
+        }
+
+        public ComponentCategory Category
+        {
+            get { return ComponentCategory.Control; }
+        }
+
+        public string Description
+        {
+            get { return "Allows scripts written in the ASL language to define the splitting behaviour."; }
         }
     }
 }

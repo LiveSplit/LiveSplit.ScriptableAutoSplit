@@ -9,7 +9,7 @@ start
 	current.AccumulatedFrames = 0;
 	current.StarTime = 0;
 
-	return old.GameFrames > 0 && Current.GameFrames == 0;
+	return old.GameFrames > 0 && current.GameFrames == 0;
 }
 
 split
