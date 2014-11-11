@@ -6,7 +6,7 @@ state("DarksidersPC")
 
 start
 {
-	return current.time != 0;
+	return current.time == 1;
 }
 
 split
