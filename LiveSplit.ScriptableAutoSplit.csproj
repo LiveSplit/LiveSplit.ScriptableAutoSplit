@@ -44,7 +44,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Irony">
-      <HintPath>..\..\Libs\Irony_2013_12_12\Irony_2013_12_12\Irony.Interpreter\bin\Debug\Irony.dll</HintPath>
+      <HintPath>..\..\Libs\Irony_2013_12_12\Irony.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
