@@ -109,10 +109,6 @@ namespace LiveSplit.UI.Components
             Settings.SetSettings(settings);
         }
 
-        public void RenameComparison(string oldName, string newName)
-        {
-        }
-
         public void Dispose()
         {
         }
