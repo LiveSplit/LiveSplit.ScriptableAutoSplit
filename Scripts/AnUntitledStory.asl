@@ -1,19 +1,24 @@
 state("Anuntitledstory")
 {
-	float dblhacktime : "AnUntitledStory.exe", 0x00189720, 0x4, 0x35c;
+	float time : "AnUntitledStory.exe", 0x00189720, 0x4, 0x358;
 }
 
 start
 {
-	return current.dblhacktime == 1.875 && old.dblhacktime == 0;
+	return current.time == 1 && old.time == 0;
 }
 
 reset
 {
-	return old.dblhacktime > current.dblhacktime;
+	return old.time > current.time;
 }
 
 isLoading
 {
 	return false;
+}
+
+gameTime
+{
+	return TimeSpan.FromSeconds(current.time);
 }

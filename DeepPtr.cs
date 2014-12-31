@@ -192,6 +192,10 @@ namespace LiveSplit
             {
                 val = (object)BitConverter.ToSingle(bytes, 0);
             }
+            else if (type == typeof(double))
+            {
+                val = (object)BitConverter.ToDouble(bytes, 0);
+            }
             else if (type == typeof(byte))
             {
                 val = (object)bytes[0];
