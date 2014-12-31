@@ -58,6 +58,12 @@ namespace LiveSplit.ASL
                 pointer.Deref<float>(p, out x);
                 return x;
             }
+            else if (type == "double")
+            {
+                double x;
+                pointer.Deref<double>(p, out x);
+                return x;
+            }
             else if (type == "byte")
             {
                 byte x;
