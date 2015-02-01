@@ -42,7 +42,8 @@ namespace LiveSplit.UI.Components
                     version = Version.Parse(element["Version"].InnerText);
                 else
                     version = new Version(1, 0, 0, 0);
-                ScriptPath = element["ScriptPath"].InnerText;
+                if (element["ScriptPath"] != null)
+                    ScriptPath = element["ScriptPath"].InnerText;
             }
         }
 
