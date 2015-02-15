@@ -155,7 +155,8 @@ namespace LiveSplit
         {
             byte[] bytes;
 
-            var result = ReadProcessBytes(process, addr, Marshal.SizeOf(type), out bytes);
+            int size  = type == typeof(bool) ? 1 : Marshal.SizeOf(type);
+            var result = ReadProcessBytes(process, addr, size, out bytes);
 
             val = ResolveToType(bytes, type);
 
