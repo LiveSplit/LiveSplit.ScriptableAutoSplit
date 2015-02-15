@@ -36,6 +36,8 @@ namespace LiveSplit.UI.Components
         public float PaddingRight { get { return 0; } }
 
         protected String OldScriptPath { get; set; }
+        protected FileSystemWatcher FSWatcher { get; set; }
+        protected bool DoReload { get; set; }
 
         public bool Refresh { get; set; }
 
@@ -54,16 +56,24 @@ namespace LiveSplit.UI.Components
         public Component()
         {
             Settings = new ComponentSettings();
+            FSWatcher = new FileSystemWatcher();
+            FSWatcher.Changed += (sender, args) => DoReload = true;
         }
 
         public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
-            if (Settings.ScriptPath != OldScriptPath)
+            if ((Settings.ScriptPath != OldScriptPath && !String.IsNullOrEmpty(Settings.ScriptPath)) || DoReload)
             {
                 Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
                 OldScriptPath = Settings.ScriptPath;
+                FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
+                FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
+                FSWatcher.EnableRaisingEvents = true;
+                DoReload = false;
             }
-            Script.Update(state);
+
+            if (Script != null)
+                Script.Update(state);
         }
 
         public void DrawHorizontal(Graphics g, LiveSplitState state, float height, Region clipRegion)
@@ -111,6 +121,8 @@ namespace LiveSplit.UI.Components
 
         public void Dispose()
         {
+            if (FSWatcher != null)
+                FSWatcher.Dispose();
         }
     }
 }
