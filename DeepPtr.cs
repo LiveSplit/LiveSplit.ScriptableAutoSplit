@@ -203,7 +203,10 @@ namespace LiveSplit
             }
             else if (type == typeof(bool))
             {
-                val = (object)BitConverter.ToBoolean(bytes, 0);
+                if (bytes == null)
+                    val = false;
+                else
+                    val = (object)BitConverter.ToBoolean(bytes, 0);
             }
             else if (type == typeof(short))
             {
