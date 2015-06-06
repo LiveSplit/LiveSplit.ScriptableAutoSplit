@@ -70,7 +70,7 @@
             this.btnSelectFile.Location = new System.Drawing.Point(367, 3);
             this.btnSelectFile.Name = "btnSelectFile";
             this.btnSelectFile.Size = new System.Drawing.Size(75, 23);
-            this.btnSelectFile.TabIndex = 4;
+            this.btnSelectFile.TabIndex = 1;
             this.btnSelectFile.Text = "Browse...";
             this.btnSelectFile.UseVisualStyleBackColor = true;
             this.btnSelectFile.Click += new System.EventHandler(this.btnSelectFile_Click);
@@ -81,7 +81,7 @@
             this.txtScriptPath.Location = new System.Drawing.Point(79, 4);
             this.txtScriptPath.Name = "txtScriptPath";
             this.txtScriptPath.Size = new System.Drawing.Size(282, 20);
-            this.txtScriptPath.TabIndex = 5;
+            this.txtScriptPath.TabIndex = 0;
             // 
             // ComponentSettings
             // 
