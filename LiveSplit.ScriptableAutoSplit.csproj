@@ -55,10 +55,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UpdateManager">
-      <HintPath>..\..\bin\Debug\UpdateManager.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="WinFormsColor">
       <HintPath>..\..\..\..\..\..\Dropbox\workspace\LiveSplit\Libs\WinForms Color Picker\WinFormsColor.dll</HintPath>
     </Reference>
@@ -90,6 +86,11 @@
     <ProjectReference Include="..\..\LiveSplit.Core\LiveSplit.Core.csproj">
       <Project>{6de847db-20a3-4848-aeee-1b4364aecdfb}</Project>
       <Name>LiveSplit.Core</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\UpdateManager\UpdateManager.csproj">
+      <Project>{56dea3a0-2eb7-493b-b50f-a5e3aa8ae52a}</Project>
+      <Name>UpdateManager</Name>
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
