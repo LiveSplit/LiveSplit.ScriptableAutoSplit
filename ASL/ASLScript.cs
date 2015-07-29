@@ -57,25 +57,8 @@ namespace LiveSplit.ASL
             {
                 OldState = State.RefreshValues(Game);
 
-                if (lsState.CurrentPhase == TimerPhase.NotRunning)
+                if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
                 {
-                    if (Start.Run(lsState, OldState, State) ?? false)
-                    {
-                        Model.Start();
-                    }
-                }
-                else if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
-                {
-                    if (Reset.Run(lsState, OldState, State) ?? false)
-                    {
-                        Model.Reset();
-                        return;
-                    }
-                    else if (Split.Run(lsState, OldState, State) ?? false)
-                    {
-                        Model.Split();
-                    }
-
                     var isPaused = IsLoading.Run(lsState, OldState, State);
                     if (isPaused != null)
                         lsState.IsGameTimePaused = isPaused;
@@ -83,6 +66,23 @@ namespace LiveSplit.ASL
                     var gameTime = GameTime.Run(lsState, OldState, State);
                     if (gameTime != null)
                         lsState.SetGameTime(gameTime);
+
+                    if (Reset.Run(lsState, OldState, State) ?? false)
+                    {
+                        Model.Reset();
+                    }
+                    else if (Split.Run(lsState, OldState, State) ?? false)
+                    {
+                        Model.Split();
+                    }
+                }
+
+                if (lsState.CurrentPhase == TimerPhase.NotRunning)
+                {
+                    if (Start.Run(lsState, OldState, State) ?? false)
+                    {
+                        Model.Start();
+                    }
                 }
             }
             else
