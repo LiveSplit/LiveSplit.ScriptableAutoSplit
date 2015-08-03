@@ -2,22 +2,10 @@
 
 using LiveSplit.ASL;
 using LiveSplit.Model;
-using LiveSplit.Options;
-using LiveSplit.TimeFormatters;
-using LiveSplit.UI.Components;
-using LiveSplit.Web;
-using LiveSplit.Web.Share;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Dynamic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Timers;
 
 namespace LiveSplit.UI.Components
 {
