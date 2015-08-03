@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using WinFormsColor;
 using System.Xml;
 
 namespace LiveSplit.UI.Components
@@ -24,7 +17,7 @@ namespace LiveSplit.UI.Components
             txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false, DataSourceUpdateMode.OnPropertyChanged);
         }
 
-        public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document)
+        public XmlNode GetSettings(XmlDocument document)
         {
             var settingsNode = document.CreateElement("Settings");
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", "1.4"));
@@ -32,7 +25,7 @@ namespace LiveSplit.UI.Components
             return settingsNode;
         }
 
-        public void SetSettings(System.Xml.XmlNode settings)
+        public void SetSettings(XmlNode settings)
         {
             var element = (XmlElement)settings;
             if (!element.IsEmpty)
