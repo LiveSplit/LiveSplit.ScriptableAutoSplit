@@ -4,8 +4,8 @@ using LiveSplit.ASL;
 using LiveSplit.Model;
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml;
 
 namespace LiveSplit.UI.Components
 {
@@ -21,8 +21,7 @@ namespace LiveSplit.UI.Components
         protected String OldScriptPath { get; set; }
         protected FileSystemWatcher FSWatcher { get; set; }
         protected bool DoReload { get; set; }
-        protected CancellationTokenSource UpdateCancel { get; set; }
-        protected Task UpdateTask { get; set; }
+        protected Timer UpdateTimer { get; set; }
 
         public bool Refresh { get; set; }
 
@@ -41,8 +40,9 @@ namespace LiveSplit.UI.Components
             Settings = new ComponentSettings();
             FSWatcher = new FileSystemWatcher();
             FSWatcher.Changed += (sender, args) => DoReload = true;
-            UpdateCancel = new CancellationTokenSource();
-            UpdateTask = Task.Run(() => ScriptUpdateLoop(state), UpdateCancel.Token);
+            UpdateTimer = new Timer() { Interval = 15 }; // run a little faster than 60hz
+            UpdateTimer.Tick += (sender, args) => UpdateScript(state);
+            UpdateTimer.Enabled = true;
         }
 
         public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
@@ -50,54 +50,44 @@ namespace LiveSplit.UI.Components
 
         }
 
-        public override System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document)
+        public override XmlNode GetSettings(XmlDocument document)
         {
             return Settings.GetSettings(document);
         }
 
-        public override System.Windows.Forms.Control GetSettingsControl(LayoutMode mode)
+        public override Control GetSettingsControl(LayoutMode mode)
         {
             return Settings;
         }
 
-        public override void SetSettings(System.Xml.XmlNode settings)
+        public override void SetSettings(XmlNode settings)
         {
             Settings.SetSettings(settings);
         }
 
         public override void Dispose()
         {
-            UpdateCancel.Cancel();
-            UpdateTask.Wait();
-
             if (FSWatcher != null)
                 FSWatcher.Dispose();
-            if (UpdateCancel != null)
-                UpdateCancel.Dispose();
-            if (UpdateTask != null)
-                UpdateTask.Dispose();
+            if (UpdateTimer != null)
+                UpdateTimer.Dispose();
         }
 
-        protected void ScriptUpdateLoop(LiveSplitState state)
+        protected void UpdateScript(LiveSplitState state)
         {
-            while (!UpdateCancel.IsCancellationRequested)
+            // this is ugly, fix eventually!
+            if (Settings.ScriptPath != OldScriptPath && !String.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
             {
-                // this is ugly, fix eventually!
-                if (Settings.ScriptPath != OldScriptPath && !String.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
-                {
-                    Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
-                    OldScriptPath = Settings.ScriptPath;
-                    FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
-                    FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
-                    FSWatcher.EnableRaisingEvents = true;
-                    DoReload = false;
-                }
-
-                if (Script != null)
-                    Script.Update(state);
-
-                Thread.Sleep(TimeSpan.FromMilliseconds(1000 / 64.0f)); // update slightly faster than 60hz
+                Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+                OldScriptPath = Settings.ScriptPath;
+                FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
+                FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
+                FSWatcher.EnableRaisingEvents = true;
+                DoReload = false;
             }
+
+            if (Script != null)
+                Script.Update(state);
         }
     }
 }
