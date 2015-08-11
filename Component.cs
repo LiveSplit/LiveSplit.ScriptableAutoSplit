@@ -3,37 +3,32 @@
 using LiveSplit.ASL;
 using LiveSplit.Model;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LiveSplit.UI.Components
 {
-    class Component : IComponent
+    class Component : LogicComponent
     {
         public ComponentSettings Settings { get; set; }
 
-        public string ComponentName
+        public override string ComponentName
         {
             get { return "Scriptable Auto Splitter"; }
         }
 
-        public float PaddingBottom { get { return 0; } }
-        public float PaddingTop { get { return 0; } }
-        public float PaddingLeft { get { return 0; } }
-        public float PaddingRight { get { return 0; } }
-
         protected String OldScriptPath { get; set; }
         protected FileSystemWatcher FSWatcher { get; set; }
         protected bool DoReload { get; set; }
+        protected CancellationTokenSource UpdateCancel { get; set; }
+        protected Task UpdateTask { get; set; }
 
         public bool Refresh { get; set; }
 
-        public IDictionary<string, Action> ContextMenuControls { get; protected set; }
-
         public ASLScript Script { get; set; }
 
-        public Component(String scriptPath)
+        public Component(LiveSplitState state, String scriptPath): this(state)
         {
             Settings = new ComponentSettings()
             {
@@ -41,76 +36,68 @@ namespace LiveSplit.UI.Components
             };
         }
 
-        public Component()
+        public Component(LiveSplitState state)
         {
             Settings = new ComponentSettings();
             FSWatcher = new FileSystemWatcher();
             FSWatcher.Changed += (sender, args) => DoReload = true;
+            UpdateCancel = new CancellationTokenSource();
+            UpdateTask = Task.Run(() => ScriptUpdateLoop(state), UpdateCancel.Token);
         }
 
-        public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
+        public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
-            if ((Settings.ScriptPath != OldScriptPath && !String.IsNullOrEmpty(Settings.ScriptPath)) || DoReload)
-            {
-                Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
-                OldScriptPath = Settings.ScriptPath;
-                FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
-                FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
-                FSWatcher.EnableRaisingEvents = true;
-                DoReload = false;
-            }
 
-            if (Script != null)
-                Script.Update(state);
         }
 
-        public void DrawHorizontal(Graphics g, LiveSplitState state, float height, Region clipRegion)
-        {
-        }
-
-        public void DrawVertical(Graphics g, LiveSplitState state, float width, Region clipRegion)
-        {
-        }
-
-        public float VerticalHeight
-        {
-            get { return 0; }
-        }
-
-        public float MinimumWidth
-        {
-            get { return 0; }
-        }
-
-        public float HorizontalWidth
-        {
-            get { return 0; }
-        }
-
-        public float MinimumHeight
-        {
-            get { return 0; }
-        }
-
-        public System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document)
+        public override System.Xml.XmlNode GetSettings(System.Xml.XmlDocument document)
         {
             return Settings.GetSettings(document);
         }
 
-        public System.Windows.Forms.Control GetSettingsControl(UI.LayoutMode mode)
+        public override System.Windows.Forms.Control GetSettingsControl(LayoutMode mode)
         {
             return Settings;
         }
 
-        public void SetSettings(System.Xml.XmlNode settings)
+        public override void SetSettings(System.Xml.XmlNode settings)
         {
             Settings.SetSettings(settings);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            UpdateCancel.Cancel();
+            UpdateTask.Wait();
+
             if (FSWatcher != null)
                 FSWatcher.Dispose();
+            if (UpdateCancel != null)
+                UpdateCancel.Dispose();
+            if (UpdateTask != null)
+                UpdateTask.Dispose();
+        }
+
+        protected void ScriptUpdateLoop(LiveSplitState state)
+        {
+            while (!UpdateCancel.IsCancellationRequested)
+            {
+                // this is ugly, fix eventually!
+                if (Settings.ScriptPath != OldScriptPath && !String.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
+                {
+                    Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+                    OldScriptPath = Settings.ScriptPath;
+                    FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
+                    FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
+                    FSWatcher.EnableRaisingEvents = true;
+                    DoReload = false;
+                }
+
+                if (Script != null)
+                    Script.Update(state);
+
+                Thread.Sleep(TimeSpan.FromMilliseconds(1000 / 64.0f)); // update slightly faster than 60hz
+            }
         }
     }
 }
