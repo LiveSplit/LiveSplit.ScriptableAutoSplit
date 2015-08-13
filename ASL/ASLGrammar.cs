@@ -18,6 +18,8 @@ namespace LiveSplit.ASL
             NonGrammarTerminals.Add(delimitedComment);
 
             var state = new KeyTerm("state", "state");
+            var init = new KeyTerm("init", "init");
+            var update = new KeyTerm("update", "update");
             var start = new KeyTerm("start", "start");
             var split = new KeyTerm("split", "split");
             var reset = new KeyTerm("reset", "reset");
@@ -44,7 +46,7 @@ namespace LiveSplit.ASL
             method.Rule = (methodType + "{" + code + "}") | Empty;
             offsetList.Rule = MakePlusRule(offsetList, comma, offset);
             offset.Rule = number;
-            methodType.Rule = start | split | isLoading | gameTime | reset;
+            methodType.Rule = init | update | start | split | isLoading | gameTime | reset;
 
             this.Root = root;
 

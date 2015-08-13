@@ -61,7 +61,7 @@ namespace LiveSplit.UI.Components
             }
 
             if (Script != null)
-                Script.Update(state);
+                Script.RunUpdate(state);
         }
 
         public void DrawHorizontal(Graphics g, LiveSplitState state, float height, Region clipRegion)
