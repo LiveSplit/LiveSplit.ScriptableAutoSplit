@@ -19,7 +19,7 @@ namespace LiveSplit.UI.Components
             get { return "Scriptable Auto Splitter"; }
         }
 
-        protected String OldScriptPath { get; set; }
+        protected string OldScriptPath { get; set; }
         protected FileSystemWatcher FSWatcher { get; set; }
         protected bool DoReload { get; set; }
         protected Timer UpdateTimer { get; set; }
@@ -28,7 +28,8 @@ namespace LiveSplit.UI.Components
 
         public ASLScript Script { get; set; }
 
-        public Component(LiveSplitState state, String scriptPath): this(state)
+        public Component(LiveSplitState state, string scriptPath)
+            : this(state)
         {
             Settings = new ComponentSettings()
             {
@@ -91,7 +92,7 @@ namespace LiveSplit.UI.Components
             {
                 try
                 {
-                    Script.Update(state);
+                    Script.RunUpdate(state);
                 }
                 catch (Exception ex)
                 {

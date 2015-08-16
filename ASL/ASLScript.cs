@@ -1,6 +1,7 @@
 ﻿using LiveSplit.Model;
 using System;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Linq;
 
 namespace LiveSplit.ASL
@@ -12,6 +13,9 @@ namespace LiveSplit.ASL
         public String ProcessName { get; set; }
         public ASLState OldState { get; set; }
         public ASLState State { get; set; }
+        public ExpandoObject Vars { get; set; }
+        public ASLMethod Init { get; set; }
+        public ASLMethod Update { get; set; }
         public ASLMethod Start { get; set; }
         public ASLMethod Split { get; set; }
         public ASLMethod Reset { get; set; }
@@ -19,13 +23,17 @@ namespace LiveSplit.ASL
         public ASLMethod GameTime { get; set; }
 
         public ASLScript(
-            String processName, ASLState state, 
-            ASLMethod start, ASLMethod split, 
-            ASLMethod reset, 
+            string processName, ASLState state,
+            ASLMethod init, ASLMethod update,
+            ASLMethod start, ASLMethod reset,
+            ASLMethod split, 
             ASLMethod isLoading, ASLMethod gameTime)
         {
             ProcessName = processName;
             State = state;
+            Vars = new ExpandoObject();
+            Init = init ?? new ASLMethod("");
+            Update = update ?? new ASLMethod("");
             Start = start ?? new ASLMethod("");
             Split = split ?? new ASLMethod("");
             Reset = reset ?? new ASLMethod("");
@@ -33,7 +41,7 @@ namespace LiveSplit.ASL
             GameTime = gameTime ?? new ASLMethod("");
         }
 
-        protected void TryConnect()
+        protected void TryConnect(LiveSplitState lsState)
         {
             if (Game == null || Game.HasExited)
             {
@@ -44,31 +52,34 @@ namespace LiveSplit.ASL
                     Game = process;
                     State.RefreshValues(Game);
                     OldState = State;
+                    Init.Run(lsState, OldState, State, Vars);
                 }
             }
         }
 
-        public void Update(LiveSplitState lsState)
+        public void RunUpdate(LiveSplitState lsState)
         {
             if (Game != null && !Game.HasExited)
             {
                 OldState = State.RefreshValues(Game);
 
+                Update.Run(lsState, OldState, State, Vars);
+
                 if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
                 {
-                    var isPaused = IsLoading.Run(lsState, OldState, State);
+                    var isPaused = IsLoading.Run(lsState, OldState, State, Vars);
                     if (isPaused != null)
                         lsState.IsGameTimePaused = isPaused;
 
-                    var gameTime = GameTime.Run(lsState, OldState, State);
+                    var gameTime = GameTime.Run(lsState, OldState, State, Vars);
                     if (gameTime != null)
                         lsState.SetGameTime(gameTime);
 
-                    if (Reset.Run(lsState, OldState, State) ?? false)
+                    if (Reset.Run(lsState, OldState, State, Vars) ?? false)
                     {
                         Model.Reset();
                     }
-                    else if (Split.Run(lsState, OldState, State) ?? false)
+                    else if (Split.Run(lsState, OldState, State, Vars) ?? false)
                     {
                         Model.Split();
                     }
@@ -76,7 +87,7 @@ namespace LiveSplit.ASL
 
                 if (lsState.CurrentPhase == TimerPhase.NotRunning)
                 {
-                    if (Start.Run(lsState, OldState, State) ?? false)
+                    if (Start.Run(lsState, OldState, State, Vars) ?? false)
                     {
                         Model.Start();
                     }
@@ -88,7 +99,7 @@ namespace LiveSplit.ASL
                 {
                     Model = new TimerModel() { CurrentState = lsState };
                 }
-                TryConnect();
+                TryConnect(lsState);
             }
         }
     }

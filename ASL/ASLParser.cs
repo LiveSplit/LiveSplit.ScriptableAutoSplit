@@ -38,13 +38,15 @@ namespace LiveSplit.ASL
                 state.ValueDefinitions.Add(valueDefinition);
             }
 
-            ASLMethod start = null, split = null, isLoading = null, gameTime = null, reset = null;
+            ASLMethod init = null, update = null, start = null, split = null, isLoading = null, gameTime = null, reset = null;
             foreach (var method in methodsNode.ChildNodes[0].ChildNodes)
             {
                 var script = new ASLMethod((String)method.ChildNodes[2].Token.Value);
                 var methodName = (String)method.ChildNodes[0].Token.Value;
                 switch (methodName)
                 {
+                    case "init": init = script; break;
+                    case "update": update = script; break;
                     case "start": start = script; break;
                     case "split": split = script; break;
                     case "isLoading": isLoading = script; break;
@@ -53,7 +55,7 @@ namespace LiveSplit.ASL
                 }
             }
 
-            return new ASLScript(processName, state, start, split, reset, isLoading, gameTime);
+            return new ASLScript(processName, state, init, update, start, split, reset, isLoading, gameTime);
         }
     }
 }
