@@ -15,12 +15,12 @@ namespace LiveSplit.UI.Components
 
         public IComponent Create(LiveSplitState state)
         {
-            return new Component();
+            return new Component(state);
         }
 
         public IComponent Create(LiveSplitState state, String script)
         {
-            return new Component(script);
+            return new Component(state, script);
         }
 
         public string UpdateName
