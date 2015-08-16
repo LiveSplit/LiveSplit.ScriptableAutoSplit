@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 using System.Xml;
+using LiveSplit.Options;
 
 namespace LiveSplit.UI.Components
 {
@@ -76,7 +77,7 @@ namespace LiveSplit.UI.Components
         protected void UpdateScript(LiveSplitState state)
         {
             // this is ugly, fix eventually!
-            if (Settings.ScriptPath != OldScriptPath && !String.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
+            if (Settings.ScriptPath != OldScriptPath && !string.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
             {
                 Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
                 OldScriptPath = Settings.ScriptPath;
@@ -87,7 +88,16 @@ namespace LiveSplit.UI.Components
             }
 
             if (Script != null)
-                Script.Update(state);
+            {
+                try
+                {
+                    Script.Update(state);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+            }
         }
     }
 }
