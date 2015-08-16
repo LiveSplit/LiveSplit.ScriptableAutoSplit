@@ -52,7 +52,7 @@ namespace LiveSplit.ASL
                     Game = process;
                     State.RefreshValues(Game);
                     OldState = State;
-                    Init.Run(lsState, OldState, State, Vars);
+                    Init.Run(lsState, OldState, State, Vars, Game);
                 }
             }
         }
@@ -63,23 +63,23 @@ namespace LiveSplit.ASL
             {
                 OldState = State.RefreshValues(Game);
 
-                Update.Run(lsState, OldState, State, Vars);
+                Update.Run(lsState, OldState, State, Vars, Game);
 
                 if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
                 {
-                    var isPaused = IsLoading.Run(lsState, OldState, State, Vars);
+                    var isPaused = IsLoading.Run(lsState, OldState, State, Vars, Game);
                     if (isPaused != null)
                         lsState.IsGameTimePaused = isPaused;
 
-                    var gameTime = GameTime.Run(lsState, OldState, State, Vars);
+                    var gameTime = GameTime.Run(lsState, OldState, State, Vars, Game);
                     if (gameTime != null)
                         lsState.SetGameTime(gameTime);
 
-                    if (Reset.Run(lsState, OldState, State, Vars) ?? false)
+                    if (Reset.Run(lsState, OldState, State, Vars, Game) ?? false)
                     {
                         Model.Reset();
                     }
-                    else if (Split.Run(lsState, OldState, State, Vars) ?? false)
+                    else if (Split.Run(lsState, OldState, State, Vars, Game) ?? false)
                     {
                         Model.Split();
                     }
@@ -87,7 +87,7 @@ namespace LiveSplit.ASL
 
                 if (lsState.CurrentPhase == TimerPhase.NotRunning)
                 {
-                    if (Start.Run(lsState, OldState, State, Vars) ?? false)
+                    if (Start.Run(lsState, OldState, State, Vars, Game) ?? false)
                     {
                         Model.Start();
                     }
