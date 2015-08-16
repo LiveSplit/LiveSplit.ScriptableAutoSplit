@@ -1,5 +1,6 @@
 ﻿using LiveSplit.Model;
 using System;
+using System.Diagnostics;
 using System.Dynamic;
 
 namespace LiveSplit.ASL
@@ -25,7 +26,7 @@ public class CompiledScript
     {{
         System.Diagnostics.Trace.WriteLine(s);
     }}
-    public dynamic Execute(dynamic timer, dynamic old, dynamic current, dynamic vars)
+    public dynamic Execute(dynamic timer, dynamic old, dynamic current, dynamic vars, dynamic game)
     {{
 	    {0}
 	    return null;
@@ -64,9 +65,9 @@ public class CompiledScript
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars)
+        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game)
         {
-            return CompiledCode.Execute(timer, old.Data, current.Data, vars);
+            return CompiledCode.Execute(timer, old.Data, current.Data, vars, game);
         }
     }
 }
