@@ -26,9 +26,9 @@ namespace LiveSplit.ASL
                 var childNodes = valueDefinitionNode.ChildNodes;
                 var type = (String)childNodes[0].Token.Value;
                 var identifier = (String)childNodes[1].Token.Value;
-                var module = (String)childNodes[3].Token.Value;
-                var moduleBase = childNodes[5].ChildNodes.Select(x => (int)x.Token.Value).First();
-                var offsets = childNodes[5].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
+                var module = childNodes[3].ChildNodes.Take(1).Select(x => (String)x.Token.Value).FirstOrDefault() ?? String.Empty;
+                var moduleBase = childNodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
+                var offsets = childNodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
                 var valueDefinition = new ASLValueDefinition() 
                 { 
                     Identifier = identifier,
