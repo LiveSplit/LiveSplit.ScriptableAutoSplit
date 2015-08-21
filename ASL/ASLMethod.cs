@@ -1,7 +1,9 @@
 ﻿using LiveSplit.Model;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.ASL
 {
@@ -12,7 +14,7 @@ namespace LiveSplit.ASL
         public ASLMethod(String code)
         {
             using (var provider =
-                new Microsoft.CSharp.CSharpCodeProvider())
+                new Microsoft.CSharp.CSharpCodeProvider(new Dictionary<string, string> { { "CompilerVersion", "v4.0" } }))
             {
                 string source = String.Format(@"
 using System;
@@ -26,7 +28,7 @@ public class CompiledScript
     {{
         System.Diagnostics.Trace.WriteLine(s);
     }}
-    public dynamic Execute(dynamic timer, dynamic old, dynamic current, dynamic vars, dynamic game)
+    public dynamic Execute(dynamic timer, dynamic old, dynamic current, dynamic vars, dynamic game, dynamic modules)
     {{
 	    {0}
 	    return null;
@@ -65,9 +67,9 @@ public class CompiledScript
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game)
+        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ProcessModuleWow64Safe[] modules)
         {
-            return CompiledCode.Execute(timer, old.Data, current.Data, vars, game);
+            return CompiledCode.Execute(timer, old.Data, current.Data, vars, game, modules);
         }
     }
 }

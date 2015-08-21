@@ -5,38 +5,39 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using LiveSplit.ComponentUtil;
 
 namespace LiveSplit
 {
     public class DeepPointer
     {
-        private List<int> _offsets;
-        private int _base;
+        private List<long> _offsets;
+        private long _base;
         private string _module;
 
-        public DeepPointer(string module, int base_, params int[] offsets)
+        public DeepPointer(string module, long base_, params long[] offsets)
         {
             _module = module.ToLower();
             _base = base_;
-            _offsets = new List<int>();
+            _offsets = new List<long>();
             _offsets.Add(0); // deref base first
             _offsets.AddRange(offsets);
         }
 
-        public DeepPointer(int base_, params int[] offsets)
+        public DeepPointer(long base_, params long[] offsets)
         {
             _base = base_;
-            _offsets = new List<int>();
+            _offsets = new List<long>();
             _offsets.Add(0); // deref base first
             _offsets.AddRange(offsets);
         }
 
         public bool Deref<T>(Process process, out T value) where T : struct
         {
-            int offset = _offsets[_offsets.Count - 1];
+            long offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessValue(process, ptr + offset, out value))
+                || !ReadProcessValue(process, new IntPtr(ptr.ToInt64() + offset), out value))
             {
                 value = default(T);
                 return false;
@@ -47,10 +48,10 @@ namespace LiveSplit
 
         public bool Deref(Process process, Type type, out object value)
         {
-            int offset = _offsets[_offsets.Count - 1];
+            long offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessValue(process, ptr + offset, type, out value))
+                || !ReadProcessValue(process, new IntPtr(ptr.ToInt64() + offset), type, out value))
             {
                 value = default(object);
                 return false;
@@ -61,10 +62,10 @@ namespace LiveSplit
 
         public bool Deref(Process process, out byte[] value, int elementCount)
         {
-            int offset = _offsets[_offsets.Count - 1];
+            long offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessBytes(process, ptr + offset, elementCount, out value))
+                || !ReadProcessBytes(process, new IntPtr(ptr.ToInt64() + offset), elementCount, out value))
             {
                 value = null;
                 return false;
@@ -75,13 +76,13 @@ namespace LiveSplit
 
         public bool Deref(Process process, out Vector3f value)
         {
-            int offset = _offsets[_offsets.Count - 1];
+            long offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             float x, y, z;
             if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessValue(process, ptr + offset + 0, out x)
-                || !ReadProcessValue(process, ptr + offset + 4, out y)
-                || !ReadProcessValue(process, ptr + offset + 8, out z))
+                || !ReadProcessValue(process, new IntPtr(ptr.ToInt64() + offset + 0), out x)
+                || !ReadProcessValue(process, new IntPtr(ptr.ToInt64() + offset + 4), out y)
+                || !ReadProcessValue(process, new IntPtr(ptr.ToInt64() + offset + 8), out z))
             {
                 value = new Vector3f();
                 return false;
@@ -94,11 +95,10 @@ namespace LiveSplit
         public bool Deref(Process process, out string str, int max)
         {
             var sb = new StringBuilder(max);
-
-            int offset = _offsets[_offsets.Count - 1];
+            long offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessString(process, ptr + offset, sb))
+                || !ReadProcessString(process, new IntPtr(ptr.ToInt64() + offset), sb))
             {
                 str = String.Empty;
                 return false;
@@ -108,29 +108,31 @@ namespace LiveSplit
             return true;
         }
 
-        bool DerefOffsets(Process process, out IntPtr ptr)
+        bool DerefOffsets(Process process,  out IntPtr ptr)
         {
+            bool is64Bit = process.Is64Bit();
+
             if (!String.IsNullOrEmpty(_module))
             {
-                ProcessModule module = process.Modules.Cast<ProcessModule>()
-                    .FirstOrDefault(m => Path.GetFileName(m.FileName).ToLower() == _module);
+                ProcessModuleWow64Safe module = process.ModulesWow64Safe()
+                    .FirstOrDefault(m => m.ModuleName.ToLower() == _module);
                 if (module == null)
                 {
                     ptr = IntPtr.Zero;
                     return false;
                 }
 
-                ptr = module.BaseAddress + _base;
+                ptr = new IntPtr(module.BaseAddress.ToInt64() + _base);
             }
             else
             {
-                ptr = process.MainModule.BaseAddress + _base;
+                ptr = new IntPtr(process.MainModuleWow64Safe().BaseAddress.ToInt64() + _base);
             }
 
 
             for (int i = 0; i < _offsets.Count - 1; i++)
             {
-                if (!ReadProcessPtr32(process, ptr + _offsets[i], out ptr)
+                if (!ReadProcessPtr(process, new IntPtr(ptr.ToInt64() + _offsets[i]), is64Bit, out ptr)
                     || ptr == IntPtr.Zero)
                 {
                     return false;
@@ -233,14 +235,15 @@ namespace LiveSplit
             return val;
         }
 
-        static bool ReadProcessPtr32(Process process, IntPtr addr, out IntPtr val)
+        static bool ReadProcessPtr(Process process, IntPtr addr, bool is64Bit, out IntPtr val)
         {
-            byte[] bytes = new byte[4];
+            byte[] bytes = new byte[is64Bit ? 8 : 4];
             int read;
             val = IntPtr.Zero;
             if (!SafeNativeMethods.ReadProcessMemory(process.Handle, addr, bytes, bytes.Length, out read) || read != bytes.Length)
                 return false;
-            val = (IntPtr)BitConverter.ToInt32(bytes, 0);
+            val = is64Bit ? (IntPtr) BitConverter.ToInt64(bytes, 0) : (IntPtr) BitConverter.ToInt32(bytes, 0);
+
             return true;
         }
 
@@ -319,5 +322,22 @@ namespace LiveSplit
             [Out] byte[] lpBuffer,
             int dwSize, // should be IntPtr if we ever need to read a size bigger than 32 bit address space
             out int lpNumberOfBytesRead);
+    }
+}
+
+public static class Extensions
+{
+    [DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.Winapi)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWow64Process([In] IntPtr hProcess,
+         [Out, MarshalAs(UnmanagedType.Bool)] out bool wow64Process);
+
+    public static bool Is64Bit(this Process process)
+    {
+        bool procWow64;
+        IsWow64Process(process.Handle, out procWow64);
+        if (Environment.Is64BitOperatingSystem && !procWow64)
+            return true;
+        return false;
     }
 }

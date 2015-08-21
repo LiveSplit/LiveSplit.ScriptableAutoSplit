@@ -27,8 +27,11 @@ namespace LiveSplit.ASL
                 var type = (String)childNodes[0].Token.Value;
                 var identifier = (String)childNodes[1].Token.Value;
                 var module = (String)childNodes[3].Token.Value;
-                var moduleBase = childNodes[5].ChildNodes.Select(x => (int)x.Token.Value).First();
-                var offsets = childNodes[5].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
+                var moduleBase = childNodes[5].ChildNodes.Select(x => (long)(int)x.Token.Value).First();
+                var offsets = childNodes[5].ChildNodes.Skip(1).Select(x => (long)(int)x.Token.Value).ToArray();
+
+                // this assumes offsets will never be bigger than 32 bit!
+
                 var valueDefinition = new ASLValueDefinition() 
                 { 
                     Identifier = identifier,
@@ -55,7 +58,7 @@ namespace LiveSplit.ASL
                 }
             }
 
-            return new ASLScript(processName, state, init, update, start, split, reset, isLoading, gameTime);
+            return new ASLScript(processName, state, init, update, start, reset, split, isLoading, gameTime);
         }
     }
 }
