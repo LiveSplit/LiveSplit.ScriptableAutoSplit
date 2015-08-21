@@ -50,7 +50,7 @@ namespace LiveSplit.ASL
                 var process = Process.GetProcessesByName(ProcessName).FirstOrDefault();
                 if (process != null && DateTime.Now - process.StartTime > TimeSpan.FromSeconds(2)) // give time for dlls to load
                 {
-                    if (Game.Is64Bit() && !Environment.Is64BitProcess)
+                    if (process.Is64Bit() && !Environment.Is64BitProcess)
                     {
                         // shouldn't happen
                         return;
