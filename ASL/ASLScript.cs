@@ -90,6 +90,7 @@ namespace LiveSplit.ASL
                     if (Start.Run(lsState, OldState, State, Vars, Game) ?? false)
                     {
                         Model.Start();
+                        Model.StartGameTime();
                     }
                 }
             }
