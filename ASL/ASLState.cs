@@ -41,49 +41,49 @@ namespace LiveSplit.ASL
             if (type == "int")
             {
                 int x;
-                pointer.Deref<int>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type == "uint")
             {
                 uint x;
-                pointer.Deref<uint>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type == "float")
             {
                 float x;
-                pointer.Deref<float>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type == "double")
             {
                 double x;
-                pointer.Deref<double>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type == "byte")
             {
                 byte x;
-                pointer.Deref<byte>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type == "bool")
             {
                 bool x;
-                pointer.Deref<bool>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type == "short")
             {
                 short x;
-                pointer.Deref<short>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type == "sbyte")
             {
                 sbyte x;
-                pointer.Deref<sbyte>(p, out x);
+                pointer.Deref(p, out x);
                 return x;
             }
             else if (type.StartsWith("string"))
@@ -97,7 +97,7 @@ namespace LiveSplit.ASL
             {
                 byte[] x;
                 var length = Int32.Parse(type.Substring("byte".Length));
-                pointer.Deref(p, out x, length);
+                pointer.Deref(p, length, out x);
                 return x;
             }
             throw new ArgumentException(string.Format("The provided type, '{0}', is not supported", type));

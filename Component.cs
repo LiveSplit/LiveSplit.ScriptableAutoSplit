@@ -80,12 +80,19 @@ namespace LiveSplit.UI.Components
             // this is ugly, fix eventually!
             if (Settings.ScriptPath != OldScriptPath && !string.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
             {
-                Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
-                OldScriptPath = Settings.ScriptPath;
-                FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
-                FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
-                FSWatcher.EnableRaisingEvents = true;
-                DoReload = false;
+                try
+                {
+                    DoReload = false;
+                    OldScriptPath = Settings.ScriptPath;
+                    FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
+                    FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
+                    FSWatcher.EnableRaisingEvents = true;
+                    Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
             }
 
             if (Script != null)

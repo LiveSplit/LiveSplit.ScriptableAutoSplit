@@ -1,39 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using LiveSplit.ComponentUtil;
 
 namespace LiveSplit
 {
+    using SizeT = UIntPtr;
+    using OffsetT = Int32;
+
     public class DeepPointer
     {
-        private List<int> _offsets;
-        private int _base;
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool ReadProcessMemory(
+            IntPtr hProcess,
+            IntPtr lpBaseAddress,
+            [Out] byte[] lpBuffer,
+            SizeT dwSize,
+            out SizeT lpNumberOfBytesRead);
+
+        private List<OffsetT> _offsets;
+        private OffsetT _base;
         private string _module;
 
-        public DeepPointer(string module, int base_, params int[] offsets)
+        public DeepPointer(string module, OffsetT base_, params OffsetT[] offsets)
+            : this(base_, offsets)
         {
             _module = module.ToLower();
+        }
+
+        public DeepPointer(OffsetT base_, params OffsetT[] offsets)
+        {
             _base = base_;
-            _offsets = new List<int>();
+            _offsets = new List<OffsetT>();
             _offsets.Add(0); // deref base first
             _offsets.AddRange(offsets);
         }
 
-        public DeepPointer(int base_, params int[] offsets)
+        public bool Deref<T>(Process process, out T value) where T : struct // all value types including structs
         {
-            _base = base_;
-            _offsets = new List<int>();
-            _offsets.Add(0); // deref base first
-            _offsets.AddRange(offsets);
-        }
-
-        public bool Deref<T>(Process process, out T value) where T : struct
-        {
-            int offset = _offsets[_offsets.Count - 1];
+            OffsetT offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             if (!this.DerefOffsets(process, out ptr)
                 || !ReadProcessValue(process, ptr + offset, out value))
@@ -45,26 +53,12 @@ namespace LiveSplit
             return true;
         }
 
-        public bool Deref(Process process, Type type, out object value)
+        public bool Deref(Process process, int count, out byte[] value)
         {
-            int offset = _offsets[_offsets.Count - 1];
+            OffsetT offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessValue(process, ptr + offset, type, out value))
-            {
-                value = default(object);
-                return false;
-            }
-
-            return true;
-        }
-
-        public bool Deref(Process process, out byte[] value, int elementCount)
-        {
-            int offset = _offsets[_offsets.Count - 1];
-            IntPtr ptr;
-            if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessBytes(process, ptr + offset, elementCount, out value))
+                || !ReadProcessBytes(process, ptr + offset, count, out value))
             {
                 value = null;
                 return false;
@@ -73,29 +67,10 @@ namespace LiveSplit
             return true;
         }
 
-        public bool Deref(Process process, out Vector3f value)
-        {
-            int offset = _offsets[_offsets.Count - 1];
-            IntPtr ptr;
-            float x, y, z;
-            if (!this.DerefOffsets(process, out ptr)
-                || !ReadProcessValue(process, ptr + offset + 0, out x)
-                || !ReadProcessValue(process, ptr + offset + 4, out y)
-                || !ReadProcessValue(process, ptr + offset + 8, out z))
-            {
-                value = new Vector3f();
-                return false;
-            }
-
-            value = new Vector3f(x, y, z);
-            return true;
-        }
-
         public bool Deref(Process process, out string str, int max)
         {
             var sb = new StringBuilder(max);
-
-            int offset = _offsets[_offsets.Count - 1];
+            OffsetT offset = _offsets[_offsets.Count - 1];
             IntPtr ptr;
             if (!this.DerefOffsets(process, out ptr)
                 || !ReadProcessString(process, ptr + offset, sb))
@@ -108,12 +83,14 @@ namespace LiveSplit
             return true;
         }
 
-        bool DerefOffsets(Process process, out IntPtr ptr)
+        bool DerefOffsets(Process process,  out IntPtr ptr)
         {
+            bool is64Bit = process.Is64Bit();
+
             if (!String.IsNullOrEmpty(_module))
             {
-                ProcessModule module = process.Modules.Cast<ProcessModule>()
-                    .FirstOrDefault(m => Path.GetFileName(m.FileName).ToLower() == _module);
+                ProcessModuleWow64Safe module = process.ModulesWow64Safe()
+                    .FirstOrDefault(m => m.ModuleName.ToLower() == _module);
                 if (module == null)
                 {
                     ptr = IntPtr.Zero;
@@ -124,13 +101,13 @@ namespace LiveSplit
             }
             else
             {
-                ptr = process.MainModule.BaseAddress + _base;
+                ptr = process.MainModuleWow64Safe().BaseAddress + _base;
             }
 
 
             for (int i = 0; i < _offsets.Count - 1; i++)
             {
-                if (!ReadProcessPtr32(process, ptr + _offsets[i], out ptr)
+                if (!ReadProcessPtr(process, ptr + _offsets[i], is64Bit, out ptr)
                     || ptr == IntPtr.Zero)
                 {
                     return false;
@@ -142,7 +119,7 @@ namespace LiveSplit
 
         static bool ReadProcessValue<T>(Process process, IntPtr addr, out T val) where T : struct
         {
-            Type type = typeof(T);
+            var type = typeof(T);
 
             val = default(T);
             object val2;
@@ -168,13 +145,14 @@ namespace LiveSplit
             return true;
         }
 
-        static bool ReadProcessBytes(Process process, IntPtr addr, int elementCount, out byte[] val)
+        static bool ReadProcessBytes(Process process, IntPtr addr, int count, out byte[] val)
         {
-            var bytes = new byte[elementCount];
+            var bytes = new byte[count];
 
-            int read;
+            SizeT read;
             val = null;
-            if (!SafeNativeMethods.ReadProcessMemory(process.Handle, addr, bytes, bytes.Length, out read) || read != bytes.Length)
+            if (!ReadProcessMemory(process.Handle, addr, bytes, (SizeT)bytes.Length, out read)
+                || read != (SizeT)bytes.Length)
                 return false;
 
             val = bytes;
@@ -184,40 +162,40 @@ namespace LiveSplit
 
         static object ResolveToType(byte[] bytes, Type type)
         {
-            object val = default(object);
+            object val;
 
             if (type == typeof(int))
             {
-                val = (object)BitConverter.ToInt32(bytes, 0);
+                val = BitConverter.ToInt32(bytes, 0);
             }
             else if (type == typeof(uint))
             {
-                val = (object)BitConverter.ToUInt32(bytes, 0);
+                val = BitConverter.ToUInt32(bytes, 0);
             }
             else if (type == typeof(float))
             {
-                val = (object)BitConverter.ToSingle(bytes, 0);
+                val = BitConverter.ToSingle(bytes, 0);
             }
             else if (type == typeof(double))
             {
-                val = (object)BitConverter.ToDouble(bytes, 0);
+                val = BitConverter.ToDouble(bytes, 0);
             }
             else if (type == typeof(byte))
             {
-                val = (object)bytes[0];
+                val = bytes[0];
             }
             else if (type == typeof(bool))
             {
                 if (bytes == null)
                     val = false;
                 else
-                    val = (object)BitConverter.ToBoolean(bytes, 0);
+                    val = BitConverter.ToBoolean(bytes, 0);
             }
             else if (type == typeof(short))
             {
-                val = (object)BitConverter.ToInt16(bytes, 0);
+                val = BitConverter.ToInt16(bytes, 0);
             }
-            else
+            else // probably a struct
             {  
                 var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
                 try
@@ -233,25 +211,28 @@ namespace LiveSplit
             return val;
         }
 
-        static bool ReadProcessPtr32(Process process, IntPtr addr, out IntPtr val)
+        static bool ReadProcessPtr(Process process, IntPtr addr, bool is64Bit, out IntPtr val)
         {
-            byte[] bytes = new byte[4];
-            int read;
+            var bytes = new byte[is64Bit ? 8 : 4];
+            SizeT read;
             val = IntPtr.Zero;
-            if (!SafeNativeMethods.ReadProcessMemory(process.Handle, addr, bytes, bytes.Length, out read) || read != bytes.Length)
+            if (!ReadProcessMemory(process.Handle, addr, bytes, (SizeT)bytes.Length, out read)
+                || read != (SizeT)bytes.Length)
                 return false;
-            val = (IntPtr)BitConverter.ToInt32(bytes, 0);
+            val = is64Bit ? (IntPtr)BitConverter.ToInt64(bytes, 0) : (IntPtr)BitConverter.ToInt32(bytes, 0);
+
             return true;
         }
 
         static bool ReadProcessString(Process process, IntPtr addr, StringBuilder sb)
         {
-            byte[] bytes = new byte[sb.Capacity];
-            int read;
-            if (!SafeNativeMethods.ReadProcessMemory(process.Handle, addr, bytes, bytes.Length, out read) || read != bytes.Length)
+            var bytes = new byte[sb.Capacity];
+            SizeT read;
+            if (!ReadProcessMemory(process.Handle, addr, bytes, (SizeT)bytes.Length, out read)
+                || read != (SizeT)bytes.Length)
                 return false;
 
-            if (read >= 2 && bytes[1] == '\x0') // hack to detect utf-16
+            if (read.ToUInt64() >= 2 && bytes[1] == '\x0') // hack to detect utf-16
                 sb.Append(Encoding.Unicode.GetString(bytes));
             else
                 sb.Append(Encoding.ASCII.GetString(bytes));
@@ -270,7 +251,8 @@ namespace LiveSplit
         }
     }
 
-    public class Vector3f
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Vector3f
     {
         public float X { get; set; }
         public float Y { get; set; }
@@ -280,9 +262,7 @@ namespace LiveSplit
         public int IY { get { return (int)this.Y; } }
         public int IZ { get { return (int)this.Z; } }
 
-        public Vector3f() { }
-
-        public Vector3f(float x, float y, float z)
+        public Vector3f(float x, float y, float z) : this()
         {
             this.X = x;
             this.Y = y;
@@ -309,15 +289,19 @@ namespace LiveSplit
             return this.X + " " + this.Y + " " + this.Z;
         }
     }
+}
 
-    static class SafeNativeMethods
+public static class Extensions
+{
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool IsWow64Process(IntPtr hProcess, [Out] out bool wow64Process);
+
+    public static bool Is64Bit(this Process process)
     {
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool ReadProcessMemory(
-            IntPtr hProcess,
-            IntPtr lpBaseAddress,
-            [Out] byte[] lpBuffer,
-            int dwSize, // should be IntPtr if we ever need to read a size bigger than 32 bit address space
-            out int lpNumberOfBytesRead);
+        bool procWow64;
+        IsWow64Process(process.Handle, out procWow64);
+        if (Environment.Is64BitOperatingSystem && !procWow64)
+            return true;
+        return false;
     }
 }
