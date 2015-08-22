@@ -12,6 +12,9 @@ namespace LiveSplit.ASL
             var parser = new Parser(grammar);
             var tree = parser.Parse(code);
 
+            if (tree.HasErrors())
+                throw new Exception("ASL parse error(s): " + String.Join("\n", tree.ParserMessages));
+
             var rootChilds = tree.Root.ChildNodes;
             var stateNode = rootChilds.Where(x => x.Term.Name == "stateDef").First();
             var methodsNode = rootChilds.Where(x => x.Term.Name == "methodList").First();

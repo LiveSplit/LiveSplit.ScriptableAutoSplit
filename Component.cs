@@ -83,11 +83,11 @@ namespace LiveSplit.UI.Components
                 try
                 {
                     DoReload = false;
-                    Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
                     OldScriptPath = Settings.ScriptPath;
                     FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
                     FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
                     FSWatcher.EnableRaisingEvents = true;
+                    Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
                 }
                 catch (Exception ex)
                 {
