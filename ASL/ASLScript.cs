@@ -42,7 +42,7 @@ namespace LiveSplit.ASL
             Reset = reset ?? new ASLMethod("");
             IsLoading = isLoading ?? new ASLMethod("");
             GameTime = gameTime ?? new ASLMethod("");
-            UsesGameTime = IsLoading.IsEmpty || GameTime.IsEmpty;
+            UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
         }
 
         protected void TryConnect(LiveSplitState lsState)
