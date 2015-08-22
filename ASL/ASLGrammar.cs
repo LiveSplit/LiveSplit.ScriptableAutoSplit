@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace LiveSplit.ASL
 {
+    [Language("asl", "1.0", "Auto Split Language grammar")]
     public class ASLGrammar : Grammar
     {
         public ASLGrammar()
@@ -30,19 +31,25 @@ namespace LiveSplit.ASL
 
             var root = new NonTerminal("root");
             var stateDef = new NonTerminal("stateDef");
+            var version = new NonTerminal("version");
+            var stateList = new NonTerminal("stateList");
             var methodList = new NonTerminal("methodList");
             var varList = new NonTerminal("varList");
             var var = new NonTerminal("var");
+            var module = new NonTerminal("module");
             var method = new NonTerminal("method");
             var offsetList = new NonTerminal("offsetList");
             var offset = new NonTerminal("offset");
             var methodType = new NonTerminal("methodType");
 
-            root.Rule = stateDef + methodList;
-            stateDef.Rule = state + "(" + stringLit + ")" + "{" + varList + "}";
+            root.Rule = stateList + methodList;
+            version.Rule = (comma + stringLit) | Empty;
+            stateDef.Rule = state + "(" + stringLit + version + ")" + "{" + varList + "}";
+            stateList.Rule = MakeStarRule(stateList, stateDef);
             methodList.Rule = MakeStarRule(methodList, method);
             varList.Rule = MakeStarRule(varList, semi, var);
-            var.Rule = (identifier + identifier + ":" + stringLit + comma + offsetList) | Empty;
+            module.Rule = (stringLit + comma) | Empty;
+            var.Rule = (identifier + identifier + ":" + module + offsetList) | Empty;
             method.Rule = (methodType + "{" + code + "}") | Empty;
             offsetList.Rule = MakePlusRule(offsetList, comma, offset);
             offset.Rule = number;

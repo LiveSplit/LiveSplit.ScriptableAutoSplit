@@ -1,5 +1,6 @@
 ﻿using Irony.Parsing;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LiveSplit.ASL
@@ -16,32 +17,40 @@ namespace LiveSplit.ASL
                 throw new Exception("ASL parse error(s): " + String.Join("\n", tree.ParserMessages));
 
             var rootChilds = tree.Root.ChildNodes;
-            var stateNode = rootChilds.Where(x => x.Term.Name == "stateDef").First();
-            var methodsNode = rootChilds.Where(x => x.Term.Name == "methodList").First();
+            var methodsNode = rootChilds.First(x => x.Term.Name == "methodList");
+            var statesNode = rootChilds.First(x => x.Term.Name == "stateList");
 
-            var processName = (String)stateNode.ChildNodes[2].Token.Value;
-            var valueDefinitionNodes = stateNode.ChildNodes[5].ChildNodes;
+            var states = new Dictionary<string, List<ASLState>>();
 
-            var state = new ASLState();
-
-            foreach (var valueDefinitionNode in valueDefinitionNodes.Where(x => x.ChildNodes.Count > 0))
+            foreach (var stateNode in statesNode.ChildNodes)
             {
-                var childNodes = valueDefinitionNode.ChildNodes;
-                var type = (String)childNodes[0].Token.Value;
-                var identifier = (String)childNodes[1].Token.Value;
-                var module = (String)childNodes[3].Token.Value;
-                var moduleBase = childNodes[5].ChildNodes.Select(x => (int)x.Token.Value).First();
-                var offsets = childNodes[5].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
+                var processName = (String)stateNode.ChildNodes[2].Token.Value;
+                var version = stateNode.ChildNodes[3].ChildNodes.Skip(1).Select(x => (String)x.Token.Value).FirstOrDefault() ?? String.Empty;
+                var valueDefinitionNodes = stateNode.ChildNodes[6].ChildNodes;
 
-                // this assumes offsets will never be bigger than 32 bit!
+                var state = new ASLState();
 
-                var valueDefinition = new ASLValueDefinition() 
-                { 
-                    Identifier = identifier,
-                    Type = type,
-                    Pointer = new DeepPointer(module, moduleBase, offsets)
-                };
-                state.ValueDefinitions.Add(valueDefinition);
+                foreach (var valueDefinitionNode in valueDefinitionNodes.Where(x => x.ChildNodes.Count > 0))
+                {
+                    var childNodes = valueDefinitionNode.ChildNodes;
+                    var type = (String)childNodes[0].Token.Value;
+                    var identifier = (String)childNodes[1].Token.Value;
+                    var module = childNodes[3].ChildNodes.Take(1).Select(x => (String)x.Token.Value).FirstOrDefault() ?? String.Empty;
+                    var moduleBase = childNodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
+                    var offsets = childNodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
+                    var valueDefinition = new ASLValueDefinition()
+                    {
+                        Identifier = identifier,
+                        Type = type,
+                        Pointer = new DeepPointer(module, moduleBase, offsets)
+                    };
+                    state.ValueDefinitions.Add(valueDefinition);
+                }
+
+                state.GameVersion = version;
+                if (!states.ContainsKey(processName))
+                    states.Add(processName, new List<ASLState>());
+                states[processName].Add(state);
             }
 
             ASLMethod init = null, update = null, start = null, split = null, isLoading = null, gameTime = null, reset = null;
@@ -61,7 +70,7 @@ namespace LiveSplit.ASL
                 }
             }
 
-            return new ASLScript(processName, state, init, update, start, reset, split, isLoading, gameTime);
+            return new ASLScript(states, init, update, start, split, reset, isLoading, gameTime);
         }
     }
 }

@@ -9,11 +9,13 @@ namespace LiveSplit.ASL
     {
         public ExpandoObject Data { get; set; }
         public List<ASLValueDefinition> ValueDefinitions { get; set; }
+        public string GameVersion { get; set; }
 
         public ASLState()
         {
             Data = new ExpandoObject();
             ValueDefinitions = new List<ASLValueDefinition>();
+            GameVersion = String.Empty;
         }
 
         public ASLState RefreshValues(Process p)

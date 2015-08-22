@@ -1,5 +1,6 @@
 ﻿using LiveSplit.Model;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
@@ -11,10 +12,11 @@ namespace LiveSplit.ASL
     {
         protected TimerModel Model { get; set; }
         protected Process Game { get; set; }
-        public String ProcessName { get; set; }
         public ASLState OldState { get; set; }
         public ASLState State { get; set; }
+        public Dictionary<string, List<ASLState>> States { get; set; } // TODO: don't use dict
         public ExpandoObject Vars { get; set; }
+        public string Version { get; set; }
         public ASLMethod Init { get; set; }
         public ASLMethod Update { get; set; }
         public ASLMethod Start { get; set; }
@@ -26,14 +28,13 @@ namespace LiveSplit.ASL
         public bool UsesGameTime { get; private set; }
 
         public ASLScript(
-            string processName, ASLState state,
+            Dictionary<string, List<ASLState>> states,
             ASLMethod init, ASLMethod update,
-            ASLMethod start, ASLMethod reset,
-            ASLMethod split, 
+            ASLMethod start, ASLMethod split,
+            ASLMethod reset, 
             ASLMethod isLoading, ASLMethod gameTime)
         {
-            ProcessName = processName;
-            State = state;
+            States = states;
             Vars = new ExpandoObject();
             Init = init ?? new ASLMethod("");
             Update = update ?? new ASLMethod("");
@@ -43,6 +44,7 @@ namespace LiveSplit.ASL
             IsLoading = isLoading ?? new ASLMethod("");
             GameTime = gameTime ?? new ASLMethod("");
             UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
+            Version = String.Empty;
         }
 
         protected void TryConnect(LiveSplitState lsState)
@@ -50,18 +52,40 @@ namespace LiveSplit.ASL
             if (Game == null || Game.HasExited)
             {
                 Game = null;
-                var process = Process.GetProcessesByName(ProcessName).FirstOrDefault();
-                if (process != null && DateTime.Now - process.StartTime > TimeSpan.FromSeconds(2)) // give time for dlls to load
+
+                var stateProcess = States.Keys.Select(proccessName => new
                 {
-                    if (process.Is64Bit() && !Environment.Is64BitProcess)
-                    {
-                        // shouldn't happen
-                        return;
-                    }
-                    Game = process;
+                    // default to first defined state in file (lazy)
+                    // TODO: default to the one with no version specified, if it exists
+                    State = States[proccessName].First(),
+                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault()
+                }).FirstOrDefault(x => x.Process != null);
+
+                if (stateProcess != null)
+                {
+                    Game = stateProcess.Process;
+                    State = stateProcess.State;
                     State.RefreshValues(Game);
                     OldState = State;
-                    Init.Run(lsState, OldState, State, Vars, Game, Game.ModulesWow64Safe());
+                    Version = String.Empty;
+
+                    string ver = Version;
+                    Init.Run(lsState, OldState, State, Vars, Game, Game.ModulesWow64Safe(), ref ver);
+                    if (ver != Version)
+                    {
+                        var state =
+                            States.Where(kv => kv.Key.ToLower() == Game.ProcessName.ToLower())
+                                .Select(kv => kv.Value)
+                                .First() // states
+                                .FirstOrDefault(s => s.GameVersion == ver);
+                        if (state != null)
+                        {
+                            State = state;
+                            State.RefreshValues(Game);
+                            OldState = State;
+                            Version = ver;
+                        }
+                    }
                 }
             }
         }
@@ -73,23 +97,24 @@ namespace LiveSplit.ASL
                 var modules = Game.ModulesWow64Safe();
                 OldState = State.RefreshValues(Game);
 
-                Update.Run(lsState, OldState, State, Vars, Game, modules);
+                string ver = Version;
+                Update.Run(lsState, OldState, State, Vars, Game, modules, ref ver);
 
                 if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
                 {
-                    var isPaused = IsLoading.Run(lsState, OldState, State, Vars, Game, modules);
+                    var isPaused = IsLoading.Run(lsState, OldState, State, Vars, Game, modules, ref ver);
                     if (isPaused != null)
                         lsState.IsGameTimePaused = isPaused;
 
-                    var gameTime = GameTime.Run(lsState, OldState, State, Vars, Game, modules);
+                    var gameTime = GameTime.Run(lsState, OldState, State, Vars, Game, modules, ref ver);
                     if (gameTime != null)
                         lsState.SetGameTime(gameTime);
 
-                    if (Reset.Run(lsState, OldState, State, Vars, Game, modules) ?? false)
+                    if (Reset.Run(lsState, OldState, State, Vars, Game, modules, ref ver) ?? false)
                     {
                         Model.Reset();
                     }
-                    else if (Split.Run(lsState, OldState, State, Vars, Game, modules) ?? false)
+                    else if (Split.Run(lsState, OldState, State, Vars, Game, modules, ref ver) ?? false)
                     {
                         Model.Split();
                     }
@@ -97,7 +122,7 @@ namespace LiveSplit.ASL
 
                 if (lsState.CurrentPhase == TimerPhase.NotRunning)
                 {
-                    if (Start.Run(lsState, OldState, State, Vars, Game, modules) ?? false)
+                    if (Start.Run(lsState, OldState, State, Vars, Game, modules, ref ver) ?? false)
                     {
                         Model.Start();
 

@@ -15,6 +15,7 @@ namespace LiveSplit.ASL
         public ASLMethod(String code)
         {
             IsEmpty = string.IsNullOrWhiteSpace(code);
+            code = code.Replace("return;", "return null;"); // hack
 
             using (var provider =
                 new Microsoft.CSharp.CSharpCodeProvider(new Dictionary<string, string> { { "CompilerVersion", "v4.0" } }))
@@ -27,6 +28,7 @@ using System.Reflection;
 using System.Text;
 public class CompiledScript
 {{
+    public string version;
     void print(string s)
     {{
         System.Diagnostics.Trace.WriteLine(s);
@@ -70,9 +72,13 @@ public class CompiledScript
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ProcessModuleWow64Safe[] modules)
+        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ProcessModuleWow64Safe[] modules, ref string version)
         {
-            return CompiledCode.Execute(timer, old.Data, current.Data, vars, game, modules);
+            // dynamic args can't be ref or out, this is a workaround
+            CompiledCode.version = version;
+            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game, modules, version);
+            version = CompiledCode.version;
+            return ret;
         }
     }
 }
