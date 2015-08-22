@@ -8,9 +8,12 @@ namespace LiveSplit.ASL
     public class ASLMethod
     {
         protected dynamic CompiledCode { get; set; }
+        public bool IsEmpty { get; private set; }
 
         public ASLMethod(String code)
         {
+            IsEmpty = string.IsNullOrWhiteSpace(code);
+
             using (var provider =
                 new Microsoft.CSharp.CSharpCodeProvider())
             {

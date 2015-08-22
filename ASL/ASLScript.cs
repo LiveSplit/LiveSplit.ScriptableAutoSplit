@@ -22,6 +22,8 @@ namespace LiveSplit.ASL
         public ASLMethod IsLoading { get; set; }
         public ASLMethod GameTime { get; set; }
 
+        public bool UsesGameTime { get; private set; }
+
         public ASLScript(
             string processName, ASLState state,
             ASLMethod init, ASLMethod update,
@@ -39,6 +41,7 @@ namespace LiveSplit.ASL
             Reset = reset ?? new ASLMethod("");
             IsLoading = isLoading ?? new ASLMethod("");
             GameTime = gameTime ?? new ASLMethod("");
+            UsesGameTime = IsLoading.IsEmpty || GameTime.IsEmpty;
         }
 
         protected void TryConnect(LiveSplitState lsState)
@@ -90,7 +93,9 @@ namespace LiveSplit.ASL
                     if (Start.Run(lsState, OldState, State, Vars, Game) ?? false)
                     {
                         Model.Start();
-                        Model.StartGameTime();
+
+                        if (UsesGameTime)
+                            Model.InitializeGameTime();
                     }
                 }
             }
