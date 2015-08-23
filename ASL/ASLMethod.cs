@@ -42,7 +42,7 @@ public class CompiledScript
     public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game)
     {{
         var memory = game;
-        var modules = game.ProcessModulesWow64Safe();
+        var modules = game.ModulesWow64Safe();
 	    {0}
 	    return null;
     }}
