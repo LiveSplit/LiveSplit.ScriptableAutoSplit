@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ASL\ASLGrammar.cs" />
+    <Compile Include="ASL\ASLMemoryUtil.cs" />
     <Compile Include="ASL\ASLMethod.cs" />
     <Compile Include="ASL\ASLParser.cs" />
     <Compile Include="ASL\ASLScript.cs" />
@@ -67,7 +68,6 @@
     <Compile Include="ComponentSettings.Designer.cs">
       <DependentUpon>ComponentSettings.cs</DependentUpon>
     </Compile>
-    <Compile Include="DeepPtr.cs" />
     <Compile Include="Factory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using System;
+using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.ASL
 {

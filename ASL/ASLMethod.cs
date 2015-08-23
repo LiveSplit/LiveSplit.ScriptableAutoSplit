@@ -33,7 +33,7 @@ public class CompiledScript
     {{
         System.Diagnostics.Trace.WriteLine(s);
     }}
-    public dynamic Execute(dynamic timer, dynamic old, dynamic current, dynamic vars, dynamic game, dynamic modules)
+    public dynamic Execute(dynamic timer, dynamic old, dynamic current, dynamic vars, dynamic game, dynamic modules, dynamic memory)
     {{
 	    {0}
 	    return null;
@@ -72,11 +72,12 @@ public class CompiledScript
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ProcessModuleWow64Safe[] modules, ref string version)
+        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game,
+            ProcessModuleWow64Safe[] modules, MemoryUtilWrapper memory, ref string version)
         {
             // dynamic args can't be ref or out, this is a workaround
             CompiledCode.version = version;
-            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game, modules, version);
+            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game, modules, memory);
             version = CompiledCode.version;
             return ret;
         }
