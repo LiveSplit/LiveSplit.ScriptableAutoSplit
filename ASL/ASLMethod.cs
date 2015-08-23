@@ -23,18 +23,26 @@ namespace LiveSplit.ASL
                 string source = String.Format(@"
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using LiveSplit.ComponentUtil;
+using LiveSplit.Model;
 public class CompiledScript
 {{
     public string version;
     void print(string s)
     {{
-        System.Diagnostics.Trace.WriteLine(s);
+        Trace.WriteLine(s);
     }}
-    public dynamic Execute(dynamic timer, dynamic old, dynamic current, dynamic vars, dynamic game, dynamic modules, dynamic memory)
+    public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game)
     {{
+        var memory = game;
+        var modules = game.ProcessModulesWow64Safe();
 	    {0}
 	    return null;
     }}
@@ -54,6 +62,7 @@ public class CompiledScript
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
                 parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
+                parameters.ReferencedAssemblies.Add("LiveSplit.Core.dll");
 
                 var res = provider.CompileAssemblyFromSource(parameters, source);
 
@@ -72,12 +81,11 @@ public class CompiledScript
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game,
-            ProcessModuleWow64Safe[] modules, MemoryUtilWrapper memory, ref string version)
+        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ref string version)
         {
             // dynamic args can't be ref or out, this is a workaround
             CompiledCode.version = version;
-            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game, modules, memory);
+            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game);
             version = CompiledCode.version;
             return ret;
         }

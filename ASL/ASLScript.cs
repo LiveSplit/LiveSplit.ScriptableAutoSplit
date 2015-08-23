@@ -16,7 +16,6 @@ namespace LiveSplit.ASL
         public ASLState State { get; set; }
         public Dictionary<string, List<ASLState>> States { get; set; } // TODO: don't use dict
         public ExpandoObject Vars { get; set; }
-        public MemoryUtilWrapper MemoryUtil { get; set; }
         public string Version { get; set; }
         public ASLMethod Init { get; set; }
         public ASLMethod Update { get; set; }
@@ -65,14 +64,13 @@ namespace LiveSplit.ASL
                 if (stateProcess != null)
                 {
                     Game = stateProcess.Process;
-                    MemoryUtil = new MemoryUtilWrapper(Game);
                     State = stateProcess.State;
                     State.RefreshValues(Game);
                     OldState = State;
                     Version = String.Empty;
 
                     string ver = Version;
-                    Init.Run(lsState, OldState, State, Vars, Game, Game.ModulesWow64Safe(), MemoryUtil, ref ver);
+                    Init.Run(lsState, OldState, State, Vars, Game, ref ver);
                     if (ver != Version)
                     {
                         var state =
@@ -96,27 +94,26 @@ namespace LiveSplit.ASL
         {
             if (Game != null && !Game.HasExited)
             {
-                var modules = Game.ModulesWow64Safe();
                 OldState = State.RefreshValues(Game);
 
                 string ver = Version;
-                Update.Run(lsState, OldState, State, Vars, Game, modules, MemoryUtil, ref ver);
+                Update.Run(lsState, OldState, State, Vars, Game, ref ver);
 
                 if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
                 {
-                    var isPaused = IsLoading.Run(lsState, OldState, State, Vars, Game, modules, MemoryUtil, ref ver);
+                    var isPaused = IsLoading.Run(lsState, OldState, State, Vars, Game, ref ver);
                     if (isPaused != null)
                         lsState.IsGameTimePaused = isPaused;
 
-                    var gameTime = GameTime.Run(lsState, OldState, State, Vars, Game, modules, MemoryUtil, ref ver);
+                    var gameTime = GameTime.Run(lsState, OldState, State, Vars, Game, ref ver);
                     if (gameTime != null)
                         lsState.SetGameTime(gameTime);
 
-                    if (Reset.Run(lsState, OldState, State, Vars, Game, modules, MemoryUtil, ref ver) ?? false)
+                    if (Reset.Run(lsState, OldState, State, Vars, Game, ref ver) ?? false)
                     {
                         Model.Reset();
                     }
-                    else if (Split.Run(lsState, OldState, State, Vars, Game, modules, MemoryUtil, ref ver) ?? false)
+                    else if (Split.Run(lsState, OldState, State, Vars, Game, ref ver) ?? false)
                     {
                         Model.Split();
                     }
@@ -124,7 +121,7 @@ namespace LiveSplit.ASL
 
                 if (lsState.CurrentPhase == TimerPhase.NotRunning)
                 {
-                    if (Start.Run(lsState, OldState, State, Vars, Game, modules, MemoryUtil, ref ver) ?? false)
+                    if (Start.Run(lsState, OldState, State, Vars, Game, ref ver) ?? false)
                     {
                         Model.Start();
 
