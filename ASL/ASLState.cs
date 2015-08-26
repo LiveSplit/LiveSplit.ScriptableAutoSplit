@@ -42,66 +42,32 @@ namespace LiveSplit.ASL
         private dynamic GetValue(Process p, String type, DeepPointer pointer)
         {
             if (type == "int")
-            {
-                int x;
-                pointer.Deref(p, out x);
-                return x;
-            }
+                return pointer.Deref<int>(p);
             else if (type == "uint")
-            {
-                uint x;
-                pointer.Deref(p, out x);
-                return x;
-            }
+                return pointer.Deref<uint>(p);
             else if (type == "float")
-            {
-                float x;
-                pointer.Deref(p, out x);
-                return x;
-            }
+                return pointer.Deref<float>(p);
             else if (type == "double")
-            {
-                double x;
-                pointer.Deref(p, out x);
-                return x;
-            }
+                return pointer.Deref<double>(p);
             else if (type == "byte")
-            {
-                byte x;
-                pointer.Deref(p, out x);
-                return x;
-            }
-            else if (type == "bool")
-            {
-                bool x;
-                pointer.Deref(p, out x);
-                return x;
-            }
-            else if (type == "short")
-            {
-                short x;
-                pointer.Deref(p, out x);
-                return x;
-            }
+                return pointer.Deref<byte>(p);
             else if (type == "sbyte")
-            {
-                sbyte x;
-                pointer.Deref(p, out x);
-                return x;
-            }
+                return pointer.Deref<sbyte>(p);
+            else if (type == "short")
+                return pointer.Deref<short>(p);
+            else if (type == "ushort")
+                return pointer.Deref<ushort>(p);
+            else if (type == "bool")
+                return pointer.Deref<bool>(p);
             else if (type.StartsWith("string"))
             {
-                String x;
                 var length = Int32.Parse(type.Substring("string".Length));
-                pointer.Deref(p, out x, length);
-                return x;
+                return pointer.DerefString(p, length);
             }
             else if (type.StartsWith("byte"))
             {
-                byte[] x;
                 var length = Int32.Parse(type.Substring("byte".Length));
-                pointer.Deref(p, length, out x);
-                return x;
+                return pointer.DerefBytes(p, length);
             }
             throw new ArgumentException(string.Format("The provided type, '{0}', is not supported", type));
         }
