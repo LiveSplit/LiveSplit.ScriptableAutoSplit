@@ -101,6 +101,9 @@ namespace LiveSplit.ASL
 
                 if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
                 {
+                    if (UsesGameTime && !lsState.IsGameTimeInitialized)
+                        Model.InitializeGameTime();
+
                     var isPaused = IsLoading.Run(lsState, OldState, State, Vars, Game, ref ver);
                     if (isPaused != null)
                         lsState.IsGameTimePaused = isPaused;
@@ -124,9 +127,6 @@ namespace LiveSplit.ASL
                     if (Start.Run(lsState, OldState, State, Vars, Game, ref ver) ?? false)
                     {
                         Model.Start();
-
-                        if (UsesGameTime)
-                            Model.InitializeGameTime();
                     }
                 }
             }
