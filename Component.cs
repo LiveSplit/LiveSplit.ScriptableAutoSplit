@@ -116,7 +116,7 @@ namespace LiveSplit.UI.Components
 
         private void Script_RefreshRateChanged(object sender, double e)
         {
-            UpdateTimer.Interval = (int)Math.Round(1000 / Script.RefreshRate);
+            UpdateTimer.Interval = (int)Math.Round(1000 / e);
         }
     }
 }
