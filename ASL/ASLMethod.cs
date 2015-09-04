@@ -35,6 +35,7 @@ using LiveSplit.Model;
 public class CompiledScript
 {{
     public string version;
+    public double refreshRate;
     void print(string s)
     {{
         Trace.WriteLine(s);
@@ -81,12 +82,14 @@ public class CompiledScript
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ref string version)
+        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ref string version, ref double refreshRate)
         {
             // dynamic args can't be ref or out, this is a workaround
             CompiledCode.version = version;
+            CompiledCode.refreshRate = refreshRate;
             var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game);
             version = CompiledCode.version;
+            refreshRate = CompiledCode.refreshRate;
             return ret;
         }
     }

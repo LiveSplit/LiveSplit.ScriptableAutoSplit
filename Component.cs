@@ -73,6 +73,8 @@ namespace LiveSplit.UI.Components
                 FSWatcher.Dispose();
             if (UpdateTimer != null)
                 UpdateTimer.Dispose();
+            if (Script != null)
+                Script.RefreshRateChanged -= Script_RefreshRateChanged;
         }
 
         protected void UpdateScript(LiveSplitState state)
@@ -87,7 +89,10 @@ namespace LiveSplit.UI.Components
                     FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
                     FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
                     FSWatcher.EnableRaisingEvents = true;
+                    if (Script != null)
+                        Script.RefreshRateChanged -= Script_RefreshRateChanged;
                     Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+                    Script.RefreshRateChanged += Script_RefreshRateChanged;
                 }
                 catch (Exception ex)
                 {
@@ -106,6 +111,11 @@ namespace LiveSplit.UI.Components
                     Log.Error(ex);
                 }
             }
+        }
+
+        private void Script_RefreshRateChanged(object sender, double e)
+        {
+            UpdateTimer.Interval = (int)Math.Round(1000 / Script.RefreshRate);
         }
     }
 }
