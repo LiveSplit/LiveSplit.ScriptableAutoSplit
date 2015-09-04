@@ -93,6 +93,7 @@ namespace LiveSplit.UI.Components
                         Script.RefreshRateChanged -= Script_RefreshRateChanged;
                     Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
                     Script.RefreshRateChanged += Script_RefreshRateChanged;
+                    Script_RefreshRateChanged(this, Script.RefreshRate);
                 }
                 catch (Exception ex)
                 {
