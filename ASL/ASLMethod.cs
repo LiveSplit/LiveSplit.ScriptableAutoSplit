@@ -3,16 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
-using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.ASL
 {
     public class ASLMethod
     {
         protected dynamic CompiledCode { get; set; }
-        public bool IsEmpty { get; private set; }
+        public bool IsEmpty { get; }
 
-        public ASLMethod(String code)
+        public ASLMethod(string code)
         {
             IsEmpty = string.IsNullOrWhiteSpace(code);
             code = code.Replace("return;", "return null;"); // hack
@@ -20,7 +19,7 @@ namespace LiveSplit.ASL
             using (var provider =
                 new Microsoft.CSharp.CSharpCodeProvider(new Dictionary<string, string> { { "CompilerVersion", "v4.0" } }))
             {
-                string source = String.Format(@"
+                string source = $@"
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -44,10 +43,10 @@ public class CompiledScript
     {{
         var memory = game;
         var modules = game.ModulesWow64Safe();
-	    {0}
+	    { code }
 	    return null;
     }}
-}}", code);
+}}";
 
                 var parameters = new System.CodeDom.Compiler.CompilerParameters()
                     {

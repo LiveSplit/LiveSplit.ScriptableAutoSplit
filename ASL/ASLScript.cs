@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
-using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.ASL
 {
@@ -57,7 +56,7 @@ namespace LiveSplit.ASL
             IsLoading = isLoading ?? new ASLMethod("");
             GameTime = gameTime ?? new ASLMethod("");
             UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
-            Version = String.Empty;
+            Version = string.Empty;
         }
 
         protected void TryConnect(LiveSplitState lsState)

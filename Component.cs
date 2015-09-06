@@ -14,10 +14,7 @@ namespace LiveSplit.UI.Components
     {
         public ComponentSettings Settings { get; set; }
 
-        public override string ComponentName
-        {
-            get { return "Scriptable Auto Splitter"; }
-        }
+        public override string ComponentName => "Scriptable Auto Splitter";
 
         protected string OldScriptPath { get; set; }
         protected FileSystemWatcher FSWatcher { get; set; }

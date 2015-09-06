@@ -8,14 +8,14 @@ namespace LiveSplit.ASL
 {
     public class ASLParser
     {
-        public static ASLScript Parse(String code)
+        public static ASLScript Parse(string code)
         {
             var grammar = new ASLGrammar();
             var parser = new Parser(grammar);
             var tree = parser.Parse(code);
 
             if (tree.HasErrors())
-                throw new Exception("ASL parse error(s): " + String.Join("\n", tree.ParserMessages));
+                throw new Exception("ASL parse error(s): " + string.Join("\n", tree.ParserMessages));
 
             var rootChilds = tree.Root.ChildNodes;
             var methodsNode = rootChilds.First(x => x.Term.Name == "methodList");
@@ -25,8 +25,8 @@ namespace LiveSplit.ASL
 
             foreach (var stateNode in statesNode.ChildNodes)
             {
-                var processName = (String)stateNode.ChildNodes[2].Token.Value;
-                var version = stateNode.ChildNodes[3].ChildNodes.Skip(1).Select(x => (String)x.Token.Value).FirstOrDefault() ?? String.Empty;
+                var processName = (string)stateNode.ChildNodes[2].Token.Value;
+                var version = stateNode.ChildNodes[3].ChildNodes.Skip(1).Select(x => (string)x.Token.Value).FirstOrDefault() ?? string.Empty;
                 var valueDefinitionNodes = stateNode.ChildNodes[6].ChildNodes;
 
                 var state = new ASLState();
@@ -34,9 +34,9 @@ namespace LiveSplit.ASL
                 foreach (var valueDefinitionNode in valueDefinitionNodes.Where(x => x.ChildNodes.Count > 0))
                 {
                     var childNodes = valueDefinitionNode.ChildNodes;
-                    var type = (String)childNodes[0].Token.Value;
-                    var identifier = (String)childNodes[1].Token.Value;
-                    var module = childNodes[3].ChildNodes.Take(1).Select(x => (String)x.Token.Value).FirstOrDefault() ?? String.Empty;
+                    var type = (string)childNodes[0].Token.Value;
+                    var identifier = (string)childNodes[1].Token.Value;
+                    var module = childNodes[3].ChildNodes.Take(1).Select(x => (string)x.Token.Value).FirstOrDefault() ?? string.Empty;
                     var moduleBase = childNodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
                     var offsets = childNodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
                     var valueDefinition = new ASLValueDefinition()
@@ -57,8 +57,8 @@ namespace LiveSplit.ASL
             ASLMethod init = null, update = null, start = null, split = null, isLoading = null, gameTime = null, reset = null;
             foreach (var method in methodsNode.ChildNodes[0].ChildNodes)
             {
-                var script = new ASLMethod((String)method.ChildNodes[2].Token.Value);
-                var methodName = (String)method.ChildNodes[0].Token.Value;
+                var script = new ASLMethod((string)method.ChildNodes[2].Token.Value);
+                var methodName = (string)method.ChildNodes[0].Token.Value;
                 switch (methodName)
                 {
                     case "init": init = script; break;

@@ -8,55 +8,22 @@ namespace LiveSplit.UI.Components
 {
     public class Factory : IComponentFactory
     {
-        public string ComponentName
-        {
-            get { return "Scriptable Auto Splitter"; }
-        }
+        public string ComponentName => "Scriptable Auto Splitter";
 
-        public IComponent Create(LiveSplitState state)
-        {
-            return new Component(state);
-        }
+        public string Description => "Allows scripts written in the ASL language to define the splitting behaviour.";
 
-        public IComponent Create(LiveSplitState state, String script)
-        {
-            return new Component(state, script);
-        }
+        public ComponentCategory Category => ComponentCategory.Control;
 
-        public string UpdateName
-        {
-            get { return ComponentName; }
-        }
+        public IComponent Create(LiveSplitState state) => new Component(state);
 
-        public string XMLURL
-        {
-#if RELEASE_CANDIDATE
-#else
-            get { return "http://livesplit.org/update/Components/update.LiveSplit.ScriptableAutoSplit.xml"; }
-#endif
-        }
+        public IComponent Create(LiveSplitState state, string script) => new Component(state, script);
 
-        public string UpdateURL
-        {
-#if RELEASE_CANDIDATE
-#else
-            get { return "http://livesplit.org/update/"; }
-#endif
-        }
+        public string UpdateName => ComponentName;
 
-        public Version Version
-        {
-            get { return Version.Parse("1.6.1"); }
-        }
+        public string XMLURL => "http://livesplit.org/update/Components/update.LiveSplit.ScriptableAutoSplit.xml";
 
-        public ComponentCategory Category
-        {
-            get { return ComponentCategory.Control; }
-        }
+        public string UpdateURL => "http://livesplit.org/update/";
 
-        public string Description
-        {
-            get { return "Allows scripts written in the ASL language to define the splitting behaviour."; }
-        }
+        public Version Version => Version.Parse("1.6.1");
     }
 }

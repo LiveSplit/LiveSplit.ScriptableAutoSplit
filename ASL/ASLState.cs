@@ -16,7 +16,7 @@ namespace LiveSplit.ASL
         {
             Data = new ExpandoObject();
             ValueDefinitions = new List<ASLValueDefinition>();
-            GameVersion = String.Empty;
+            GameVersion = string.Empty;
         }
 
         public ASLState RefreshValues(Process p)
@@ -39,7 +39,7 @@ namespace LiveSplit.ASL
             return clone;
         }
 
-        private dynamic GetValue(Process p, String type, DeepPointer pointer)
+        private dynamic GetValue(Process p, string type, DeepPointer pointer)
         {
             if (type == "int")
                 return pointer.Deref<int>(p);
@@ -61,12 +61,12 @@ namespace LiveSplit.ASL
                 return pointer.Deref<bool>(p);
             else if (type.StartsWith("string"))
             {
-                var length = Int32.Parse(type.Substring("string".Length));
+                var length = int.Parse(type.Substring("string".Length));
                 return pointer.DerefString(p, length);
             }
             else if (type.StartsWith("byte"))
             {
-                var length = Int32.Parse(type.Substring("byte".Length));
+                var length = int.Parse(type.Substring("byte".Length));
                 return pointer.DerefBytes(p, length);
             }
             throw new ArgumentException(string.Format("The provided type, '{0}', is not supported", type));
@@ -75,7 +75,7 @@ namespace LiveSplit.ASL
         public object Clone()
         {
             var clone = new ExpandoObject();
-            foreach (var pair in (IDictionary<string, object>)Data)
+            foreach (var pair in Data)
             {
                 ((IDictionary<string, object>)clone).Add(pair);
             }

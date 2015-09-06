@@ -6,7 +6,7 @@ namespace LiveSplit.UI.Components
 {
     public partial class ComponentSettings : UserControl
     {
-        public String ScriptPath { get; set; }
+        public string ScriptPath { get; set; }
 
         public ComponentSettings()
         {

@@ -55,11 +55,11 @@ namespace LiveSplit.ASL
             offset.Rule = number;
             methodType.Rule = init | update | start | split | isLoading | gameTime | reset;
 
-            this.Root = root;
+            Root = root;
 
             MarkTransient(varList, methodList, offset, methodType);
 
-            this.LanguageFlags = LanguageFlags.NewLineBeforeEOF;
+            LanguageFlags = LanguageFlags.NewLineBeforeEOF;
         }
 
         Token MatchCodeTerminal(Terminal terminal, ParsingContext context, ISourceStream source)
