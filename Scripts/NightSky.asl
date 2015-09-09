@@ -1,7 +1,7 @@
 state("NightSky")
 {
-	bool isLoading : "Nightsky.exe", 0x00211490, 0x498, 0x35;
-	int chapterID : "Nightsky.exe", 0x00211490, 0xa4, 0x1b0;
+	bool isLoading : 0x211490, 0x498, 0x035;
+	int  chapterID : 0x211490, 0x0A4, 0x1B0;
 }
 
 start
@@ -17,8 +17,4 @@ split
 isLoading
 {
 	return current.isLoading;
-}
-
-gameTime
-{
 }

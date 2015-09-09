@@ -4,15 +4,15 @@ state("javaw")
 
 start
 {
-	current.startTime = -1;
-	current.gameTime = -1;
-	current.realTime = TimeSpan.Zero;
-	current.realTimeDelta = TimeSpan.Zero;
+	vars.startTime = -1;
+	vars.gameTime = -1;
+	vars.realTime = TimeSpan.Zero;
+	vars.realTimeDelta = TimeSpan.Zero;
 }
 
 isLoading
 {
-	return current.realTimeDelta.TotalSeconds < 4.5;
+	return vars.realTimeDelta.TotalSeconds < 4.5;
 }
 
 gameTime
@@ -38,16 +38,18 @@ gameTime
 					}
 					num = 10 * num + (int)(c - '0');
 				}
-				if (current.startTime == -1)
+				if (vars.startTime == -1)
 				{
-					current.startTime = num;
+					vars.startTime = num;
 				}
-				current.gameTime = (num - current.startTime) * 50;
-				if (current.gameTime != old.gameTime)
+				var prevGameTime = vars.gameTime;
+				vars.gameTime = (num - vars.startTime) * 50;
+				if (vars.gameTime != prevGameTime)
 				{
-					current.realTime = timer.CurrentTime.RealTime;
-					current.realTimeDelta = current.realTime - old.realTime;
-					return new TimeSpan(0, 0, 0, 0, current.gameTime);
+					var prevRealTime = vars.realTime;
+					vars.realTime = timer.CurrentTime.RealTime;
+					vars.realTimeDelta = vars.realTime - prevRealTime;
+					return new TimeSpan(0, 0, 0, 0, vars.gameTime);
 				}
 			}
 		}

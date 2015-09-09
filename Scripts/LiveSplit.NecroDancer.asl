@@ -1,16 +1,16 @@
 state("NecroDancer")
 {
-	int ZoneID : "NecroDancer.exe", 0x0006DA40, 0x230;
-	int LevelID : "NecroDancer.exe", 0x0006DA40, 0x2c4;
-	int LevelTime : "NecroDancer.exe", 0x0006DA40, 0x10c;
-	int Health : "NecroDancer.exe", 0x0018EF38, 0x14, 0x130;
-	byte GamePaused  : "NecroDancer.exe", 0x0006DA40, 0x88;
+	int  ZoneID     : 0x06DA40, 0x230;
+	int  LevelID    : 0x06DA40, 0x2C4;
+	int  LevelTime  : 0x06DA40, 0x10C;
+	int  Health     : 0x18EF38, 0x014, 0x130;
+	byte GamePaused : 0x06DA40, 0x088;
 }
 
 start
 {
-	current.GameTime = 0;
-	current.AccumulatedTime = 0;//-current.LevelTime;
+	vars.GameTime = 0;
+	vars.AccumulatedTime = 0;//-current.LevelTime;
 	
 	var isNotInMainRoom = !(current.ZoneID == 1 && current.LevelID == -2);
 	var isInANewLevel = (old.ZoneID != current.ZoneID 
@@ -43,7 +43,8 @@ gameTime
 		&& !(current.ZoneID == 1 && current.LevelID == 1))
 		current.AccumulatedTime += old.LevelTime;
 
-	current.GameTime = current.LevelTime + current.AccumulatedTime;
-	if (current.GameTime != old.GameTime || current.GamePaused != 0)
-		return TimeSpan.FromMilliseconds(current.GameTime);
+	var prevGameTime = vars.GameTime;
+	vars.GameTime = current.LevelTime + current.AccumulatedTime;
+	if (vars.GameTime != prevGameTime || current.GamePaused != 0)
+		return TimeSpan.FromMilliseconds(vars.GameTime);
 }

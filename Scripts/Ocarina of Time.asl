@@ -1,17 +1,17 @@
 state("project64")
 {
 	//Addresses in Little Endian instead of Big Endian
-	byte400 Data : "Project64.exe", 0x000D6A1C, 0x11a570;
-	int GameFrames : "Project64.exe", 0x000D6A1C, 0x11f568;
-	byte SceneID : "Project64.exe", 0x000D6A1C, 0x1c8546;
-	sbyte GohmasHealth : "Project64.exe", 0x000D6A1C, 0x1e840c;
-	sbyte GanonsHealth : "Project64.exe", 0x000D6A1C, 0x1fa2dc;
-	short GanonsAnimation : "Project64.exe", 0x000D6A1C, 0x1fa374;
-	short DialogID : "Project64.exe", 0x000D6A1C, 0x1d8872;
-	byte IsOnTitleScreenOrFileSelect : "Project64.exe", 0x000D6A1C, 0x11b92c;
-	float X : "Project64.exe", 0x000D6A1C, 0x1c8714;
-	float Y : "Project64.exe", 0x000D6A1C, 0x1c8718;
-	float Z : "Project64.exe", 0x000D6A1C, 0x1c871c;
+	byte400 Data                        : 0xD6A1C, 0x11A570;
+	int     GameFrames                  : 0xD6A1C, 0x11F568;
+	byte    SceneID                     : 0xD6A1C, 0x1C8546;
+	sbyte   GohmasHealth                : 0xD6A1C, 0x1E840C;
+	sbyte   GanonsHealth                : 0xD6A1C, 0x1FA2DC;
+	short   GanonsAnimation             : 0xD6A1C, 0x1FA374;
+	short   DialogID                    : 0xD6A1C, 0x1D8872;
+	byte    IsOnTitleScreenOrFileSelect : 0xD6A1C, 0x11B92C;
+	float   X                           : 0xD6A1C, 0x1C8714;
+	float   Y                           : 0xD6A1C, 0x1C8718;
+	float   Z                           : 0xD6A1C, 0x1C871C;
 }
 
 start

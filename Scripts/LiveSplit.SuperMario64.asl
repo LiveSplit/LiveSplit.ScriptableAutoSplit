@@ -1,13 +1,13 @@
 state("project64")
 {
-	byte Stars : "Project64.exe", 0x000D6A1C, 0x33b218;
-	int GameFrames : "Project64.exe", 0x000D6A1C, 0x32d5d4;
+	byte Stars      : 0xD6A1C, 0x33B218;
+	int  GameFrames : 0xD6A1C, 0x32D5D4;
 }
 
 start
 {
-	current.AccumulatedFrames = 0;
-	current.StarTime = 0;
+	vars.AccumulatedFrames = 0;
+	vars.StarTime = 0;
 
 	return old.GameFrames > 0 && current.GameFrames == 0;
 }
@@ -15,15 +15,15 @@ start
 split
 {
 	if (old.Stars < current.Stars)
-		current.StarTime = current.GameFrames;
+		vars.StarTime = current.GameFrames;
 
-	if (current.StarTime > 0)
+	if (vars.StarTime > 0)
 	{
-		var delta = current.GameFrames - current.StarTime;
+		var delta = current.GameFrames - vars.StarTime;
 		
 		if (delta > 120)
 		{
-			current.StarTime = 0;
+			vars.StarTime = 0;
 			return true;
 		}
 	}
@@ -37,7 +37,7 @@ isLoading
 gameTime
 {
 	if (current.GameFrames < old.GameFrames)
-		current.AccumulatedFrames += old.GameFrames;
+		vars.AccumulatedFrames += old.GameFrames;
 
-	return TimeSpan.FromSeconds((current.GameFrames + current.AccumulatedFrames) / 30.0f);
+	return TimeSpan.FromSeconds((current.GameFrames + vars.AccumulatedFrames) / 30.0f);
 }
