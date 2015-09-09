@@ -1,8 +1,8 @@
 state("OctodadDadliestCatch")
 {
-	string48 levelName : "OctodadDadliestCatch.exe", 0x0023FD88, 0xd8, 0xc, 0x4c, 0x0;
-	bool isLoading : "OctodadDadliestCatch.exe", 0x0023FD8C, 0x4c, 0x8c; 
-	float levelTimer : "OctodadDadliestCatch.exe", 0x0023FD88, 0xd8, 0x8;
+	string48 levelName  : 0x23FD88, 0xd8, 0x0C, 0x4C, 0x0;
+	bool     isLoading  : 0x23FD8C, 0x4C, 0x8C; 
+	float    levelTimer : 0x23FD88, 0xD8, 0x08;
 }
 
 start
@@ -22,8 +22,4 @@ split
 isLoading
 {
 	return current.isLoading;
-}
-
-gameTime
-{
 }

@@ -1,19 +1,19 @@
 state("snes9x")
 {
-	byte isInALevel : "snes9x.exe", 0x002EFBA4, 0x2904a;
-	short levelFrames : "snes9x.exe", 0x002EFBA4, 0x3a9;
+	byte  isInALevel  : 0x2EFBA4, 0x2904A;
+	short levelFrames : 0x2EFBA4, 0x003A9;
 }
 
 start
 {
-	current.gameTime = TimeSpan.Zero;
+	vars.gameTime = TimeSpan.Zero;
 	return old.isInALevel == 4 && current.isInALevel == 0;
 }
 
 split
 {
 	if (current.levelFrames < old.levelFrames)
-		current.gameTime += TimeSpan.FromSeconds(old.levelFrames / 60.0f);	
+		vars.gameTime += TimeSpan.FromSeconds(old.levelFrames / 60.0f);	
 
 	return old.isInALevel == 1 && current.isInALevel == 0;
 }
@@ -25,5 +25,5 @@ isLoading
 
 gameTime
 {
-	return current.gameTime + TimeSpan.FromSeconds(current.levelFrames / 60.0f);
+	return vars.gameTime + TimeSpan.FromSeconds(current.levelFrames / 60.0f);
 }
