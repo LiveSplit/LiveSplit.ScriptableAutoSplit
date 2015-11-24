@@ -70,7 +70,7 @@ namespace LiveSplit.ASL
                     // default to first defined state in file (lazy)
                     // TODO: default to the one with no version specified, if it exists
                     State = States[proccessName].First(),
-                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault()
+                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault(x => !x.HasExited)
                 }).FirstOrDefault(x => x.Process != null);
 
                 if (stateProcess != null)
