@@ -10,9 +10,11 @@ namespace LiveSplit.ASL
     {
         protected dynamic CompiledCode { get; set; }
         public bool IsEmpty { get; }
+        public dynamic options;
 
         public ASLMethod(string code)
         {
+            options = new ExpandoObject();
             IsEmpty = string.IsNullOrWhiteSpace(code);
             code = code.Replace("return;", "return null;"); // hack
 
@@ -35,6 +37,7 @@ public class CompiledScript
 {{
     public string version;
     public double refreshRate;
+    public bool pauseOnExit;
     void print(string s)
     {{
         Trace.WriteLine(s);
@@ -43,8 +46,8 @@ public class CompiledScript
     {{
         var memory = game;
         var modules = game.ModulesWow64Safe();
-	    { code }
-	    return null;
+        { code }
+        return null;
     }}
 }}";
 
@@ -81,14 +84,16 @@ public class CompiledScript
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ref string version, ref double refreshRate)
+        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game)
         {
             // dynamic args can't be ref or out, this is a workaround
-            CompiledCode.version = version;
-            CompiledCode.refreshRate = refreshRate;
+            CompiledCode.version = options.version;
+            CompiledCode.refreshRate = options.refreshRate;
+            CompiledCode.pauseOnExit = options.pauseOnExit;
             var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game);
-            version = CompiledCode.version;
-            refreshRate = CompiledCode.refreshRate;
+            options.version = CompiledCode.version;
+            options.refreshRate = CompiledCode.refreshRate;
+            options.pauseOnExit = CompiledCode.pauseOnExit;
             return ret;
         }
     }

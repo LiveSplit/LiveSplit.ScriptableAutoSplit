@@ -15,17 +15,26 @@ namespace LiveSplit.ASL
         public ASLState State { get; set; }
         public Dictionary<string, List<ASLState>> States { get; set; } // TODO: don't use dict
         public ExpandoObject Vars { get; set; }
-        public string Version { get; set; }
-        private double refreshRate = 1000 / 15d;
+        public string Version
+        {
+            get { return options.version; }
+            set { options.version = value; }
+        }
+        private dynamic options;
         public double RefreshRate
         {
-            get { return refreshRate; }
+            get { return options.refreshRate; }
             set
             {
-                if (RefreshRateChanged != null && value != refreshRate)
+                if (RefreshRateChanged != null && value != options.refreshRate)
                     RefreshRateChanged(this, value);
-                refreshRate = value;
+                options.refreshRate = value;
             }
+        }
+        public bool PauseOnExit
+        {
+            get { return options.pauseOnExit; }
+            set { options.pauseOnExit = value; }
         }
         public ASLMethod Init { get; set; }
         public ASLMethod Update { get; set; }
@@ -48,6 +57,7 @@ namespace LiveSplit.ASL
         {
             States = states;
             Vars = new ExpandoObject();
+            options = new ExpandoObject();
             Init = init ?? new ASLMethod("");
             Update = update ?? new ASLMethod("");
             Start = start ?? new ASLMethod("");
@@ -57,6 +67,8 @@ namespace LiveSplit.ASL
             GameTime = gameTime ?? new ASLMethod("");
             UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
             Version = string.Empty;
+            RefreshRate = 1000 / 15d;
+            PauseOnExit = false;
         }
 
         protected void TryConnect(LiveSplitState lsState)
@@ -70,7 +82,7 @@ namespace LiveSplit.ASL
                     // default to first defined state in file (lazy)
                     // TODO: default to the one with no version specified, if it exists
                     State = States[proccessName].First(),
-                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault()
+                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault(x => !x.HasExited)
                 }).FirstOrDefault(x => x.Process != null);
 
                 if (stateProcess != null)
@@ -104,9 +116,9 @@ namespace LiveSplit.ASL
 
         private dynamic runMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
         {
-            var refreshRate = RefreshRate;
-            var result = methodToRun.Run(lsState, OldState, State, Vars, Game, ref ver, ref refreshRate);
-            RefreshRate = refreshRate;
+            methodToRun.options = options;
+            var result = methodToRun.Run(lsState, OldState, State, Vars, Game);
+            options = methodToRun.options;
             return result;
         }
 
@@ -156,6 +168,15 @@ namespace LiveSplit.ASL
                 {
                     Model = new TimerModel() { CurrentState = lsState };
                 }
+
+                if (UsesGameTime && lsState.IsGameTimeInitialized)
+                {
+                    if (PauseOnExit)
+                        lsState.IsGameTimePaused = true;
+                    else
+                        lsState.IsGameTimePaused = false;
+                }
+
                 TryConnect(lsState);
             }
         }
