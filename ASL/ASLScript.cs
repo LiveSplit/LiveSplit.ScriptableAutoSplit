@@ -27,6 +27,7 @@ namespace LiveSplit.ASL
                 refreshRate = value;
             }
         }
+        public ASLSettings CustomSettings { get; set; }
         public ASLMethod Init { get; set; }
         public ASLMethod Update { get; set; }
         public ASLMethod Start { get; set; }
@@ -34,17 +35,19 @@ namespace LiveSplit.ASL
         public ASLMethod Reset { get; set; }
         public ASLMethod IsLoading { get; set; }
         public ASLMethod GameTime { get; set; }
+        public ASLMethod SettingsMethod { get; set; }
 
         public bool UsesGameTime { get; private set; }
 
         public event EventHandler<double> RefreshRateChanged;
+        public event EventHandler<string> GameVersionChanged;
 
         public ASLScript(
             Dictionary<string, List<ASLState>> states,
             ASLMethod init, ASLMethod update,
             ASLMethod start, ASLMethod split,
             ASLMethod reset, 
-            ASLMethod isLoading, ASLMethod gameTime)
+            ASLMethod isLoading, ASLMethod gameTime, ASLMethod settingsMethod)
         {
             States = states;
             Vars = new ExpandoObject();
@@ -57,6 +60,9 @@ namespace LiveSplit.ASL
             GameTime = gameTime ?? new ASLMethod("");
             UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
             Version = string.Empty;
+
+            SettingsMethod = settingsMethod ?? new ASLMethod("");
+            CustomSettings = new ASLSettings();
         }
 
         protected void TryConnect(LiveSplitState lsState)
@@ -82,9 +88,11 @@ namespace LiveSplit.ASL
                     Version = string.Empty;
 
                     string ver = Version;
+                    
                     runMethod(Init, lsState, ref ver);
                     if (ver != Version)
                     {
+                        GameVersionChanged(this, ver);
                         var state =
                             States.Where(kv => kv.Key.ToLower() == Game.ProcessName.ToLower())
                                 .Select(kv => kv.Value)
@@ -105,9 +113,24 @@ namespace LiveSplit.ASL
         private dynamic runMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
         {
             var refreshRate = RefreshRate;
-            var result = methodToRun.Run(lsState, OldState, State, Vars, Game, ref ver, ref refreshRate);
+            var result = methodToRun.Run(lsState, OldState, State, Vars, Game, ref ver, ref refreshRate, CustomSettings);
             RefreshRate = refreshRate;
             return result;
+        }
+
+        private dynamic runPreInitMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
+        {
+            var refreshRate = RefreshRate;
+            var result = methodToRun.Run(lsState, Vars, ref ver, ref refreshRate, CustomSettings);
+            RefreshRate = refreshRate;
+            return result;
+        }
+
+        public ASLSettings GetSettings(LiveSplitState lsState)
+        {
+            string ver = Version;
+            runPreInitMethod(SettingsMethod, lsState, ref ver);
+            return CustomSettings;
         }
 
         public void RunUpdate(LiveSplitState lsState)

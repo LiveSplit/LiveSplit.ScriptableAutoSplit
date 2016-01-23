@@ -70,8 +70,7 @@ namespace LiveSplit.UI.Components
                 FSWatcher.Dispose();
             if (UpdateTimer != null)
                 UpdateTimer.Dispose();
-            if (Script != null)
-                Script.RefreshRateChanged -= Script_RefreshRateChanged;
+            removeListenersFromScript();
         }
 
         protected void UpdateScript(LiveSplitState state)
@@ -86,11 +85,17 @@ namespace LiveSplit.UI.Components
                     FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
                     FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
                     FSWatcher.EnableRaisingEvents = true;
-                    if (Script != null)
-                        Script.RefreshRateChanged -= Script_RefreshRateChanged;
+                    removeListenersFromScript();
+
+                    // New script
                     Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
                     Script.RefreshRateChanged += Script_RefreshRateChanged;
                     Script_RefreshRateChanged(this, Script.RefreshRate);
+
+                    Script.GameVersionChanged += Script_GameVersionChanged;
+                    Settings.SetGameVersion(null);
+
+                    Settings.SetASLSettings(Script.GetSettings(state));
                 }
                 catch (Exception ex)
                 {
@@ -111,9 +116,23 @@ namespace LiveSplit.UI.Components
             }
         }
 
+        private void removeListenersFromScript()
+        {
+            if (Script != null)
+            {
+                Script.RefreshRateChanged -= Script_RefreshRateChanged;
+                Script.GameVersionChanged -= Script_GameVersionChanged;
+            }
+        }
+
         private void Script_RefreshRateChanged(object sender, double e)
         {
             UpdateTimer.Interval = (int)Math.Round(1000 / e);
+        }
+
+        private void Script_GameVersionChanged(object sender, string version)
+        {
+            Settings.SetGameVersion(version);
         }
     }
 }

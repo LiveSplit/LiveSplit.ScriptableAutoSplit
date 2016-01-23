@@ -29,30 +29,90 @@
         private void InitializeComponent()
         {
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.checkAllButton = new System.Windows.Forms.Button();
+            this.uncheckAllButton = new System.Windows.Forms.Button();
+            this.resetToDefaultButton = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.btnSelectFile = new System.Windows.Forms.Button();
             this.txtScriptPath = new System.Windows.Forms.TextBox();
+            this.aslSettings = new System.Windows.Forms.CheckedListBox();
+            this.optionsLabel = new System.Windows.Forms.Label();
+            this.gameVersion = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
+            this.tableLayoutPanel1.AutoSize = true;
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 76F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 81F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnSelectFile, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.txtScriptPath, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.aslSettings, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.optionsLabel, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.flowLayoutPanel1, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.gameVersion, 1, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(7, 7);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 3;
+            this.tableLayoutPanel1.RowCount = 4;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(445, 227);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(462, 523);
             this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.flowLayoutPanel1.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.flowLayoutPanel1, 2);
+            this.flowLayoutPanel1.Controls.Add(this.checkAllButton);
+            this.flowLayoutPanel1.Controls.Add(this.uncheckAllButton);
+            this.flowLayoutPanel1.Controls.Add(this.resetToDefaultButton);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(206, 491);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(253, 29);
+            this.flowLayoutPanel1.TabIndex = 8;
+            // 
+            // checkAllButton
+            // 
+            this.checkAllButton.Location = new System.Drawing.Point(3, 3);
+            this.checkAllButton.Name = "checkAllButton";
+            this.checkAllButton.Size = new System.Drawing.Size(62, 23);
+            this.checkAllButton.TabIndex = 5;
+            this.checkAllButton.Text = "Check all";
+            this.checkAllButton.UseVisualStyleBackColor = true;
+            this.checkAllButton.Click += new System.EventHandler(this.checkAllButton_Click);
+            // 
+            // uncheckAllButton
+            // 
+            this.uncheckAllButton.AutoSize = true;
+            this.uncheckAllButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.uncheckAllButton.Location = new System.Drawing.Point(71, 3);
+            this.uncheckAllButton.Name = "uncheckAllButton";
+            this.uncheckAllButton.Size = new System.Drawing.Size(74, 23);
+            this.uncheckAllButton.TabIndex = 6;
+            this.uncheckAllButton.Text = "Uncheck all";
+            this.uncheckAllButton.UseVisualStyleBackColor = true;
+            this.uncheckAllButton.Click += new System.EventHandler(this.uncheckAllButton_Click);
+            // 
+            // resetToDefaultButton
+            // 
+            this.resetToDefaultButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.resetToDefaultButton.Location = new System.Drawing.Point(151, 3);
+            this.resetToDefaultButton.Name = "resetToDefaultButton";
+            this.resetToDefaultButton.Size = new System.Drawing.Size(99, 23);
+            this.resetToDefaultButton.TabIndex = 7;
+            this.resetToDefaultButton.Text = "Reset to default";
+            this.resetToDefaultButton.UseVisualStyleBackColor = true;
+            this.resetToDefaultButton.Click += new System.EventHandler(this.resetToDefaultButton_Click);
             // 
             // label1
             // 
@@ -67,9 +127,9 @@
             // btnSelectFile
             // 
             this.btnSelectFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSelectFile.Location = new System.Drawing.Point(367, 3);
+            this.btnSelectFile.Location = new System.Drawing.Point(385, 3);
             this.btnSelectFile.Name = "btnSelectFile";
-            this.btnSelectFile.Size = new System.Drawing.Size(75, 23);
+            this.btnSelectFile.Size = new System.Drawing.Size(74, 23);
             this.btnSelectFile.TabIndex = 1;
             this.btnSelectFile.Text = "Browse...";
             this.btnSelectFile.UseVisualStyleBackColor = true;
@@ -80,8 +140,41 @@
             this.txtScriptPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.txtScriptPath.Location = new System.Drawing.Point(79, 4);
             this.txtScriptPath.Name = "txtScriptPath";
-            this.txtScriptPath.Size = new System.Drawing.Size(282, 20);
+            this.txtScriptPath.Size = new System.Drawing.Size(300, 20);
             this.txtScriptPath.TabIndex = 0;
+            // 
+            // aslSettings
+            // 
+            this.aslSettings.CheckOnClick = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.aslSettings, 2);
+            this.aslSettings.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.aslSettings.FormattingEnabled = true;
+            this.aslSettings.HorizontalScrollbar = true;
+            this.aslSettings.Location = new System.Drawing.Point(79, 61);
+            this.aslSettings.Name = "aslSettings";
+            this.aslSettings.Size = new System.Drawing.Size(380, 424);
+            this.aslSettings.TabIndex = 4;
+            this.aslSettings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.aslSettings_ItemCheck);
+            // 
+            // optionsLabel
+            // 
+            this.optionsLabel.AutoSize = true;
+            this.optionsLabel.Location = new System.Drawing.Point(3, 58);
+            this.optionsLabel.Name = "optionsLabel";
+            this.optionsLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 0);
+            this.optionsLabel.Size = new System.Drawing.Size(46, 17);
+            this.optionsLabel.TabIndex = 9;
+            this.optionsLabel.Text = "Options:";
+            // 
+            // gameVersion
+            // 
+            this.gameVersion.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.gameVersion.AutoSize = true;
+            this.gameVersion.Location = new System.Drawing.Point(79, 37);
+            this.gameVersion.Name = "gameVersion";
+            this.gameVersion.Size = new System.Drawing.Size(182, 13);
+            this.gameVersion.TabIndex = 10;
+            this.gameVersion.Text = "Detected Game Version: <unknown>";
             // 
             // ComponentSettings
             // 
@@ -90,10 +183,13 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "ComponentSettings";
             this.Padding = new System.Windows.Forms.Padding(7);
-            this.Size = new System.Drawing.Size(459, 241);
+            this.Size = new System.Drawing.Size(476, 537);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -103,6 +199,12 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSelectFile;
         public System.Windows.Forms.TextBox txtScriptPath;
-
+        private System.Windows.Forms.CheckedListBox aslSettings;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.Button checkAllButton;
+        private System.Windows.Forms.Button uncheckAllButton;
+        private System.Windows.Forms.Button resetToDefaultButton;
+        private System.Windows.Forms.Label optionsLabel;
+        private System.Windows.Forms.Label gameVersion;
     }
 }

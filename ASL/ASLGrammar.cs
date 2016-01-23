@@ -24,6 +24,7 @@ namespace LiveSplit.ASL
             var start = new KeyTerm("start", "start");
             var split = new KeyTerm("split", "split");
             var reset = new KeyTerm("reset", "reset");
+            var settings = new KeyTerm("settings", "settings");
             var isLoading = new KeyTerm("isLoading", "isLoading");
             var gameTime = new KeyTerm("gameTime", "gameTime");
             var comma = ToTerm(",", "comma");
@@ -53,7 +54,7 @@ namespace LiveSplit.ASL
             method.Rule = (methodType + "{" + code + "}") | Empty;
             offsetList.Rule = MakePlusRule(offsetList, comma, offset);
             offset.Rule = number;
-            methodType.Rule = init | update | start | split | isLoading | gameTime | reset;
+            methodType.Rule = init | update | start | split | isLoading | gameTime | reset | settings;
 
             Root = root;
 

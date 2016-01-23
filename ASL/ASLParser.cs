@@ -54,11 +54,11 @@ namespace LiveSplit.ASL
                 states[processName].Add(state);
             }
 
-            ASLMethod init = null, update = null, start = null, split = null, isLoading = null, gameTime = null, reset = null;
+            ASLMethod init = null, update = null, start = null, split = null, isLoading = null, gameTime = null, reset = null, settings = null;
             foreach (var method in methodsNode.ChildNodes[0].ChildNodes)
             {
-                var script = new ASLMethod((string)method.ChildNodes[2].Token.Value);
                 var methodName = (string)method.ChildNodes[0].Token.Value;
+                var script = new ASLMethod((string)method.ChildNodes[2].Token.Value, methodName == "settings");
                 switch (methodName)
                 {
                     case "init": init = script; break;
@@ -67,11 +67,12 @@ namespace LiveSplit.ASL
                     case "split": split = script; break;
                     case "isLoading": isLoading = script; break;
                     case "gameTime": gameTime = script; break;
-                    case "reset": reset = script; break; 
+                    case "reset": reset = script; break;
+                    case "settings": settings = script; break;
                 }
             }
 
-            return new ASLScript(states, init, update, start, split, reset, isLoading, gameTime);
+            return new ASLScript(states, init, update, start, split, reset, isLoading, gameTime, settings);
         }
     }
 }
