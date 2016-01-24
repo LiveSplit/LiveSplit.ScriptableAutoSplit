@@ -4,12 +4,12 @@
     {
         public string Name { get; set; }
         public string Label { get; set; }
-        public bool Enabled { get; set; }
+        public bool Value { get; set; }
 
         public ASLSetting(string name, bool defaultValue, string label)
         {
             Name = name;
-            Enabled = defaultValue;
+            Value = defaultValue;
             Label = label;
         }
 

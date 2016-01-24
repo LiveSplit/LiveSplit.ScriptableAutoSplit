@@ -16,6 +16,7 @@ namespace LiveSplit.UI.Components
 
         public override string ComponentName => "Scriptable Auto Splitter";
 
+        protected LiveSplitState State { get; }
         protected string OldScriptPath { get; set; }
         protected FileSystemWatcher FSWatcher { get; set; }
         protected bool DoReload { get; set; }
@@ -36,11 +37,12 @@ namespace LiveSplit.UI.Components
 
         public Component(LiveSplitState state)
         {
+            State = state;
             Settings = new ComponentSettings();
             FSWatcher = new FileSystemWatcher();
             FSWatcher.Changed += (sender, args) => DoReload = true;
             UpdateTimer = new Timer() { Interval = 15 }; // run a little faster than 60hz
-            UpdateTimer.Tick += (sender, args) => UpdateScript(state);
+            UpdateTimer.Tick += (sender, args) => UpdateScript();
             UpdateTimer.Enabled = true;
         }
 
@@ -70,10 +72,10 @@ namespace LiveSplit.UI.Components
                 FSWatcher.Dispose();
             if (UpdateTimer != null)
                 UpdateTimer.Dispose();
-            removeListenersFromScript();
+            scriptCleanup();
         }
 
-        protected void UpdateScript(LiveSplitState state)
+        protected void UpdateScript()
         {
             // this is ugly, fix eventually!
             if (Settings.ScriptPath != OldScriptPath && !string.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
@@ -85,8 +87,8 @@ namespace LiveSplit.UI.Components
                     FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
                     FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
                     FSWatcher.EnableRaisingEvents = true;
-                    removeListenersFromScript();
-
+                    scriptCleanup();
+                    
                     // New script
                     Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
                     Script.RefreshRateChanged += Script_RefreshRateChanged;
@@ -95,7 +97,7 @@ namespace LiveSplit.UI.Components
                     Script.GameVersionChanged += Script_GameVersionChanged;
                     Settings.SetGameVersion(null);
 
-                    Settings.SetASLSettings(Script.GetSettings(state));
+                    Settings.SetASLSettings(Script.GetSettings(State));
                 }
                 catch (Exception ex)
                 {
@@ -107,7 +109,7 @@ namespace LiveSplit.UI.Components
             {
                 try
                 {
-                    Script.RunUpdate(state);
+                    Script.RunUpdate(State);
                 }
                 catch (Exception ex)
                 {
@@ -116,12 +118,13 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        private void removeListenersFromScript()
+        private void scriptCleanup()
         {
             if (Script != null)
             {
                 Script.RefreshRateChanged -= Script_RefreshRateChanged;
                 Script.GameVersionChanged -= Script_GameVersionChanged;
+                Script.RunShutdown(State);
             }
         }
 

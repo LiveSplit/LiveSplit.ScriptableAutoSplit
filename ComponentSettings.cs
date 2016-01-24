@@ -12,19 +12,16 @@ namespace LiveSplit.UI.Components
 
         private Dictionary<string, bool> _lastLoadedFromSettings;
         private Dictionary<string, bool> _defaultValues;
+        private Dictionary<object, ASL.ASLSetting> _methodSettings;
 
         public ComponentSettings()
         {
             InitializeComponent();
 
             ScriptPath = "";
+            _methodSettings = new Dictionary<object, ASL.ASLSetting>();
 
             txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false, DataSourceUpdateMode.OnPropertyChanged);
-        }
-
-        public void SetGameVersion(string version)
-        {
-            gameVersion.Text = version != null ? "Detected Game Version: " + version : "";
         }
 
         public XmlNode GetSettings(XmlDocument document)
@@ -32,7 +29,10 @@ namespace LiveSplit.UI.Components
             var settingsNode = document.CreateElement("Settings");
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", "1.4"));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "ScriptPath", ScriptPath));
-            appendASLSettingsToXml(document, settingsNode);
+            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Start", startCheckbox.Checked));
+            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Reset", resetCheckbox.Checked));
+            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Split", splitCheckbox.Checked));
+            appendCustomSettingsToXml(document, settingsNode);
             return settingsNode;
         }
 
@@ -47,9 +47,12 @@ namespace LiveSplit.UI.Components
             if (!element.IsEmpty)
             {
                 ScriptPath = SettingsHelper.ParseString(element["ScriptPath"], string.Empty);
-                parseASLSettingsFromXml(element);
+                startCheckbox.Checked = SettingsHelper.ParseBool(element["Start"], true);
+                resetCheckbox.Checked = SettingsHelper.ParseBool(element["Reset"], true);
+                splitCheckbox.Checked = SettingsHelper.ParseBool(element["Split"], true);
+                parseCustomSettingsFromXml(element);
             }
-            Console.WriteLine("SetSEttings");
+            Console.WriteLine("SetSettings #####"+element["Start"]);
         }
 
         /// <summary>
@@ -58,37 +61,87 @@ namespace LiveSplit.UI.Components
         /// <param name="settings"></param>
         public void SetASLSettings(ASL.ASLSettings settings)
         {
-            aslSettings.Items.Clear();
+            customSettingsList.Items.Clear();
             Dictionary<string, bool> values = new Dictionary<string, bool>();
-            foreach (var item in settings.Settings)
+            foreach (var setting in settings.OrderedSettings)
             {
-                ASL.ASLSetting setting = item.Value;
-                aslSettings.Items.Add(setting, setting.Enabled);
-                values.Add(setting.Name, setting.Enabled);
+                customSettingsList.Items.Add(setting, setting.Value);
+                values.Add(setting.Name, setting.Value);
             }
             _defaultValues = values;
             // Update from settings (in case settings are already loaded, which should be the case)
             updateItemsInList(_lastLoadedFromSettings);
-            updateOptionsVisibility();
+            updateCustomSettingsVisibility();
+
+            updateBasicSettings(settings);
         }
 
-        private void updateOptionsVisibility()
+        private void updateBasicSettings(ASL.ASLSettings settings)
+        {
+            _methodSettings.Clear();
+            updateBasicSetting(settings, startCheckbox, "start");
+            updateBasicSetting(settings, resetCheckbox, "reset");
+            updateBasicSetting(settings, splitCheckbox, "split");
+        }
+
+        private void updateBasicSetting(ASL.ASLSettings settings, CheckBox checkbox, string name)
+        {
+            //checkbox.DataBindings.Clear();
+            if (settings.MethodPresent(name))
+            {
+                ASL.ASLSetting setting = settings.MethodSettings[name];
+                //checkbox.DataBindings.Add("Checked", setting, "Value");
+                _methodSettings.Add(checkbox, setting);
+                checkbox.Enabled = true;
+                setting.Value = checkbox.Checked;
+            } else
+            {
+                checkbox.Enabled = false;
+                checkbox.Checked = false;
+            }
+        }
+
+        private void updateCustomSettingsVisibility()
         {
             bool show = _defaultValues.Count > 0;
-            aslSettings.Visible = show;
+            customSettingsList.Visible = show;
             resetToDefaultButton.Visible = show;
             checkAllButton.Visible = show;
             uncheckAllButton.Visible = show;
-            optionsLabel.Visible = show;
+            customSettingsLabel.Visible = show;
         }
 
-        private void appendASLSettingsToXml(XmlDocument document, XmlNode parent)
+        /// <summary>
+        /// Updates the values of the CheckedListBox entries based on what was last loaded from
+        /// the settings. This will implicitly also update the value in the ASLSetting
+        /// object in the list.
+        /// </summary>
+        private void updateItemsInList(Dictionary<string, bool> settingValues)
         {
-            XmlElement aslParent = document.CreateElement("ASLSettings");
-            foreach (var item in aslSettings.Items)
+            if (settingValues == null)
+            {
+                return;
+            }
+            for (int i = 0; i < customSettingsList.Items.Count; i++)
+            {
+                var setting = (ASL.ASLSetting)customSettingsList.Items[i];
+                string id = setting.Name;
+                bool value = setting.Value;
+                if (settingValues.ContainsKey(id))
+                {
+                    value = settingValues[id];
+                }
+                customSettingsList.SetItemChecked(i, value);
+            }
+        }
+
+        private void appendCustomSettingsToXml(XmlDocument document, XmlNode parent)
+        {
+            XmlElement aslParent = document.CreateElement("CustomSettings");
+            foreach (var item in customSettingsList.Items)
             {
                 var setting = (ASL.ASLSetting)item;
-                XmlElement element = SettingsHelper.ToElement(document, "Setting", setting.Enabled);
+                XmlElement element = SettingsHelper.ToElement(document, "Setting", setting.Value);
                 XmlAttribute id = SettingsHelper.ToAttribute(document, "id", setting.Name);
                 element.Attributes.Append(id);
                 aslParent.AppendChild(element);
@@ -101,13 +154,13 @@ namespace LiveSplit.UI.Components
         /// from the component settings). Stores them in a Dictionary for later usage.
         /// </summary>
         /// <param name="data"></param>
-        private void parseASLSettingsFromXml(XmlElement data)
+        private void parseCustomSettingsFromXml(XmlElement data)
         {
             Dictionary<string, bool> result = new Dictionary<string, bool>();
-            XmlElement aslSettingsNode = data["ASLSettings"];
-            if (aslSettingsNode != null && aslSettingsNode.HasChildNodes)
+            XmlElement customSettingsNode = data["CustomSettings"];
+            if (customSettingsNode != null && customSettingsNode.HasChildNodes)
             {
-                foreach (XmlElement element in aslSettingsNode.ChildNodes)
+                foreach (XmlElement element in customSettingsNode.ChildNodes)
                 {
                     if (element.Name == "Setting")
                     {
@@ -125,28 +178,9 @@ namespace LiveSplit.UI.Components
             updateItemsInList(_lastLoadedFromSettings);
         }
 
-        /// <summary>
-        /// Updates the values of the CheckedListBox entries based on what was last loaded from
-        /// the settings. This will implicitly also update the value in the ASLSetting
-        /// object in the list.
-        /// </summary>
-        private void updateItemsInList(Dictionary<string, bool> settingValues)
+        public void SetGameVersion(string version)
         {
-            if (settingValues == null)
-            {
-                return;
-            }
-            for (int i = 0; i < aslSettings.Items.Count; i++)
-            {
-                var setting = (ASL.ASLSetting)aslSettings.Items[i];
-                string id = setting.Name;
-                bool value = setting.Enabled;
-                if (settingValues.ContainsKey(id))
-                {
-                    value = settingValues[id];
-                }
-                aslSettings.SetItemChecked(i, value);
-            }
+            gameVersion.Text = version != null ? "Game Version: " + version : "";
         }
 
         private void btnSelectFile_Click(object sender, EventArgs e)
@@ -161,34 +195,26 @@ namespace LiveSplit.UI.Components
                 ScriptPath = txtScriptPath.Text = dialog.FileName;
         }
 
-        private void aslSettings_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void customSettingsList_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            ASL.ASLSetting setting = (ASL.ASLSetting)aslSettings.Items[e.Index];
-            setting.Enabled = e.NewValue == CheckState.Checked;
-            Console.WriteLine(((CheckedListBox)sender).Items[e.Index] + " " + e.NewValue);
-            
-
-            //ASL.ASLSetting selected = (ASL.ASLSetting)aslSettings.SelectedItem;
-            //if (selected != null)
-            //{
-            //    selected.Enabled = e.NewValue == CheckState.Checked;
-            //    Console.WriteLine(((CheckedListBox)sender).Items[e.Index] + " " + e.NewValue);
-            //}
+            ASL.ASLSetting setting = (ASL.ASLSetting)customSettingsList.Items[e.Index];
+            setting.Value = e.NewValue == CheckState.Checked;
+            //Console.WriteLine(((CheckedListBox)sender).Items[e.Index] + " " + e.NewValue);
         }
 
         private void checkAllButton_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < aslSettings.Items.Count; i++)
+            for (int i = 0; i < customSettingsList.Items.Count; i++)
             {
-                aslSettings.SetItemChecked(i, true);
+                customSettingsList.SetItemChecked(i, true);
             }
         }
 
         private void uncheckAllButton_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < aslSettings.Items.Count; i++)
+            for (int i = 0; i < customSettingsList.Items.Count; i++)
             {
-                aslSettings.SetItemChecked(i, false);
+                customSettingsList.SetItemChecked(i, false);
             }
         }
 
@@ -196,5 +222,14 @@ namespace LiveSplit.UI.Components
         {
             updateItemsInList(_defaultValues);
         }
+
+        private void methodCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_methodSettings.ContainsKey(sender))
+            {
+                _methodSettings[sender].Value = ((CheckBox)sender).Checked;
+            }
+        }
+
     }
 }

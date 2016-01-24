@@ -27,7 +27,8 @@ namespace LiveSplit.ASL
                 refreshRate = value;
             }
         }
-        public ASLSettings CustomSettings { get; set; }
+        public ASLSettings Settings { get; set; }
+
         public ASLMethod Init { get; set; }
         public ASLMethod Update { get; set; }
         public ASLMethod Start { get; set; }
@@ -35,7 +36,8 @@ namespace LiveSplit.ASL
         public ASLMethod Reset { get; set; }
         public ASLMethod IsLoading { get; set; }
         public ASLMethod GameTime { get; set; }
-        public ASLMethod SettingsMethod { get; set; }
+        public ASLMethod Startup { get; set; }
+        public ASLMethod Shutdown { get; set; }
 
         public bool UsesGameTime { get; private set; }
 
@@ -46,9 +48,12 @@ namespace LiveSplit.ASL
             Dictionary<string, List<ASLState>> states,
             ASLMethod init, ASLMethod update,
             ASLMethod start, ASLMethod split,
-            ASLMethod reset, 
-            ASLMethod isLoading, ASLMethod gameTime, ASLMethod settingsMethod)
+            ASLMethod reset, ASLMethod isLoading,
+            ASLMethod gameTime, ASLMethod startup,
+            ASLMethod shutdown)
         {
+            Settings = new ASLSettings();
+
             States = states;
             Vars = new ExpandoObject();
             Init = init ?? new ASLMethod("");
@@ -58,11 +63,24 @@ namespace LiveSplit.ASL
             Reset = reset ?? new ASLMethod("");
             IsLoading = isLoading ?? new ASLMethod("");
             GameTime = gameTime ?? new ASLMethod("");
+            Startup = startup ?? new ASLMethod("");
+            Shutdown = shutdown ?? new ASLMethod("");
+
+            if (!Start.IsEmpty)
+            {
+                Settings.AddMethodSetting("start");
+            }
+            if (!Split.IsEmpty)
+            {
+                Settings.AddMethodSetting("split");
+            }
+            if (!Reset.IsEmpty)
+            {
+                Settings.AddMethodSetting("reset");
+            }
+
             UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
             Version = string.Empty;
-
-            SettingsMethod = settingsMethod ?? new ASLMethod("");
-            CustomSettings = new ASLSettings();
         }
 
         protected void TryConnect(LiveSplitState lsState)
@@ -113,7 +131,7 @@ namespace LiveSplit.ASL
         private dynamic runMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
         {
             var refreshRate = RefreshRate;
-            var result = methodToRun.Run(lsState, OldState, State, Vars, Game, ref ver, ref refreshRate, CustomSettings);
+            var result = methodToRun.Run(lsState, OldState, State, Vars, Game, ref ver, ref refreshRate, Settings);
             RefreshRate = refreshRate;
             return result;
         }
@@ -121,7 +139,7 @@ namespace LiveSplit.ASL
         private dynamic runPreInitMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
         {
             var refreshRate = RefreshRate;
-            var result = methodToRun.Run(lsState, Vars, ref ver, ref refreshRate, CustomSettings);
+            var result = methodToRun.Run(lsState, Vars, ref ver, ref refreshRate, Settings);
             RefreshRate = refreshRate;
             return result;
         }
@@ -129,8 +147,14 @@ namespace LiveSplit.ASL
         public ASLSettings GetSettings(LiveSplitState lsState)
         {
             string ver = Version;
-            runPreInitMethod(SettingsMethod, lsState, ref ver);
-            return CustomSettings;
+            runPreInitMethod(Startup, lsState, ref ver);
+            return Settings;
+        }
+
+        public void RunShutdown(LiveSplitState lsState)
+        {
+            string ver = Version;
+            runPreInitMethod(Shutdown, lsState, ref ver);
         }
 
         public void RunUpdate(LiveSplitState lsState)
@@ -157,11 +181,17 @@ namespace LiveSplit.ASL
 
                     if (runMethod(Reset, lsState, ref ver) ?? false)
                     {
-                        Model.Reset();
+                        if (Settings.MethodEnabled("reset"))
+                        {
+                            Model.Reset();
+                        }
                     }
                     else if (runMethod(Split, lsState, ref ver) ?? false)
                     {
-                        Model.Split();
+                        if (Settings.MethodEnabled("split"))
+                        {
+                            Model.Split();
+                        }
                     }
                 }
 
@@ -169,7 +199,11 @@ namespace LiveSplit.ASL
                 {
                     if (runMethod(Start, lsState, ref ver) ?? false)
                     {
-                        Model.Start();
+                        if (Settings.MethodEnabled("start"))
+                        {
+                            Console.WriteLine("Start");
+                            Model.Start();
+                        }
                     }
                 }
             }
