@@ -11,6 +11,7 @@ namespace LiveSplit.ASL
     {
         protected TimerModel Model { get; set; }
         protected Process Game { get; set; }
+        private bool initialized = false;
         public ASLState OldState { get; set; }
         public ASLState State { get; set; }
         public Dictionary<string, List<ASLState>> States { get; set; } // TODO: don't use dict
@@ -99,31 +100,11 @@ namespace LiveSplit.ASL
 
                 if (stateProcess != null)
                 {
+                    initialized = false;
                     Game = stateProcess.Process;
                     State = stateProcess.State;
-                    State.RefreshValues(Game);
-                    OldState = State;
-                    Version = string.Empty;
-
-                    string ver = Version;
-                    
-                    runMethod(Init, lsState, ref ver);
-                    if (ver != Version)
-                    {
-                        GameVersionChanged(this, ver);
-                        var state =
-                            States.Where(kv => kv.Key.ToLower() == Game.ProcessName.ToLower())
-                                .Select(kv => kv.Value)
-                                .First() // states
-                                .FirstOrDefault(s => s.GameVersion == ver);
-                        if (state != null)
-                        {
-                            State = state;
-                            State.RefreshValues(Game);
-                            OldState = State;
-                            Version = ver;
-                        }
-                    }
+                    debug("Connected to game: "+Game.ProcessName);
+                    init(lsState);
                 }
             }
         }
@@ -136,6 +117,7 @@ namespace LiveSplit.ASL
             return result;
         }
 
+        // Run method without counting on being connected to the game (startup/shutdown).
         private dynamic runPreInitMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
         {
             var refreshRate = RefreshRate;
@@ -144,8 +126,10 @@ namespace LiveSplit.ASL
             return result;
         }
 
-        public ASLSettings GetSettings(LiveSplitState lsState)
+        // Run startup and return settings defined in ASL script
+        public ASLSettings RunStartup(LiveSplitState lsState)
         {
+            debug("Running startup");
             string ver = Version;
             runPreInitMethod(Startup, lsState, ref ver);
             return Settings;
@@ -153,6 +137,7 @@ namespace LiveSplit.ASL
 
         public void RunShutdown(LiveSplitState lsState)
         {
+            debug("Running shutdown");
             string ver = Version;
             runPreInitMethod(Shutdown, lsState, ref ver);
         }
@@ -161,50 +146,12 @@ namespace LiveSplit.ASL
         {
             if (Game != null && !Game.HasExited)
             {
-                OldState = State.RefreshValues(Game);
-
-                string ver = Version;
-                runMethod(Update, lsState, ref ver);
-
-                if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
+                if (!initialized)
                 {
-                    if (UsesGameTime && !lsState.IsGameTimeInitialized)
-                        Model.InitializeGameTime();
-
-                    var isPaused = runMethod(IsLoading, lsState, ref ver);
-                    if (isPaused != null)
-                        lsState.IsGameTimePaused = isPaused;
-
-                    var gameTime = runMethod(GameTime, lsState, ref ver);
-                    if (gameTime != null)
-                        lsState.SetGameTime(gameTime);
-
-                    if (runMethod(Reset, lsState, ref ver) ?? false)
-                    {
-                        if (Settings.MethodEnabled("reset"))
-                        {
-                            Model.Reset();
-                        }
-                    }
-                    else if (runMethod(Split, lsState, ref ver) ?? false)
-                    {
-                        if (Settings.MethodEnabled("split"))
-                        {
-                            Model.Split();
-                        }
-                    }
+                    init(lsState);
                 }
-
-                if (lsState.CurrentPhase == TimerPhase.NotRunning)
-                {
-                    if (runMethod(Start, lsState, ref ver) ?? false)
-                    {
-                        if (Settings.MethodEnabled("start"))
-                        {
-                            Console.WriteLine("Start");
-                            Model.Start();
-                        }
-                    }
+                else {
+                    update(lsState);
                 }
             }
             else
@@ -215,6 +162,96 @@ namespace LiveSplit.ASL
                 }
                 TryConnect(lsState);
             }
+        }
+
+        // This is executed each time after connecting to the game (usually just once,
+        // unless an error occurs before the method finishes).
+        private void init(LiveSplitState lsState)
+        {
+            debug("Initializing");
+
+            State.RefreshValues(Game);
+            OldState = State;
+            Version = string.Empty;
+
+            string ver = Version;
+            runMethod(Init, lsState, ref ver);
+
+            if (ver != Version)
+            {
+                GameVersionChanged(this, ver);
+                var state =
+                    States.Where(kv => kv.Key.ToLower() == Game.ProcessName.ToLower())
+                        .Select(kv => kv.Value)
+                        .First() // states
+                        .FirstOrDefault(s => s.GameVersion == ver);
+                if (state != null)
+                {
+                    State = state;
+                    State.RefreshValues(Game);
+                    OldState = State;
+                    Version = ver;
+                    debug("Switched to version " + Version + " state");
+                }
+            }
+
+            initialized = true;
+            debug("Initialized, ready to update values");
+        }
+
+        // This is executed repeatedly as long as the game is connected and initialized.
+        private void update(LiveSplitState lsState)
+        {
+            OldState = State.RefreshValues(Game);
+
+            string ver = Version;
+            runMethod(Update, lsState, ref ver);
+
+            if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
+            {
+                if (UsesGameTime && !lsState.IsGameTimeInitialized)
+                    Model.InitializeGameTime();
+
+                var isPaused = runMethod(IsLoading, lsState, ref ver);
+                if (isPaused != null)
+                    lsState.IsGameTimePaused = isPaused;
+
+                var gameTime = runMethod(GameTime, lsState, ref ver);
+                if (gameTime != null)
+                    lsState.SetGameTime(gameTime);
+
+                if (runMethod(Reset, lsState, ref ver) ?? false)
+                {
+                    if (Settings.MethodEnabled("reset"))
+                    {
+                        Model.Reset();
+                    }
+                }
+                else if (runMethod(Split, lsState, ref ver) ?? false)
+                {
+                    if (Settings.MethodEnabled("split"))
+                    {
+                        Model.Split();
+                    }
+                }
+            }
+
+            if (lsState.CurrentPhase == TimerPhase.NotRunning)
+            {
+                if (runMethod(Start, lsState, ref ver) ?? false)
+                {
+                    if (Settings.MethodEnabled("start"))
+                    {
+                        Console.WriteLine("Start");
+                        Model.Start();
+                    }
+                }
+            }
+        }
+
+        private void debug(string output)
+        {
+            Trace.WriteLine("[ASL] "+output);
         }
     }
 }

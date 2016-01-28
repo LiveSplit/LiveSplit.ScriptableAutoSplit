@@ -36,11 +36,8 @@ namespace LiveSplit.UI.Components
             return settingsNode;
         }
 
-        /// <summary>
-        /// Loads the settings of this component from Xml. This might happen more than once
-        /// (e.g. when the settings dialog is cancelled to restore previous settings).
-        /// </summary>
-        /// <param name="settings"></param>
+        // Loads the settings of this component from Xml. This might happen more than once
+        // (e.g. when the settings dialog is cancelled to restore previous settings).
         public void SetSettings(XmlNode settings)
         {
             var element = (XmlElement)settings;
@@ -55,10 +52,7 @@ namespace LiveSplit.UI.Components
             Console.WriteLine("SetSettings #####"+element["Start"]);
         }
 
-        /// <summary>
-        /// Sets the custom settings defined in the ASL script. Populates the CheckedListBox.
-        /// </summary>
-        /// <param name="settings"></param>
+        // Sets the custom settings defined in the ASL script. Populates the CheckedListBox.
         public void SetASLSettings(ASL.ASLSettings settings)
         {
             customSettingsList.Items.Clear();
@@ -111,11 +105,9 @@ namespace LiveSplit.UI.Components
             customSettingsLabel.Visible = show;
         }
 
-        /// <summary>
-        /// Updates the values of the CheckedListBox entries based on what was last loaded from
-        /// the settings. This will implicitly also update the value in the ASLSetting
-        /// object in the list.
-        /// </summary>
+        // Updates the values of the CheckedListBox entries based on what was last loaded from
+        // the settings. This will implicitly also update the value in the ASLSetting
+        // object in the list.
         private void updateItemsInList(Dictionary<string, bool> settingValues)
         {
             if (settingValues == null)
@@ -149,11 +141,8 @@ namespace LiveSplit.UI.Components
             parent.AppendChild(aslParent);
         }
 
-        /// <summary>
-        /// Parses the ASLSettings from the given XML Element (which should be the Settings-element
-        /// from the component settings). Stores them in a Dictionary for later usage.
-        /// </summary>
-        /// <param name="data"></param>
+        // Parses the ASLSettings from the given XML Element (which should be the Settings-element
+        // from the component settings). Stores them in a Dictionary for later usage.
         private void parseCustomSettingsFromXml(XmlElement data)
         {
             Dictionary<string, bool> result = new Dictionary<string, bool>();
@@ -198,6 +187,7 @@ namespace LiveSplit.UI.Components
         private void customSettingsList_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             ASL.ASLSetting setting = (ASL.ASLSetting)customSettingsList.Items[e.Index];
+            // Update value in the ASLSetting object, which also changes it in the ASL script
             setting.Value = e.NewValue == CheckState.Checked;
             //Console.WriteLine(((CheckedListBox)sender).Items[e.Index] + " " + e.NewValue);
         }

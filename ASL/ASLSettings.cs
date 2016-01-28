@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,7 +33,12 @@ namespace LiveSplit.ASL
 
         public bool GetSettingValue(string name)
         {
-            return Settings[name].Value;
+            if (Settings.ContainsKey(name))
+            {
+                return Settings[name].Value;
+            }
+            Trace.WriteLine("[ASL] Custom Setting Key doesn't exist: "+name);
+            return false;
         }
 
         public void AddMethodSetting(string name)

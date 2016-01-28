@@ -70,10 +70,9 @@
             this.tableLayoutPanel1.RowCount = 4;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 29F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(462, 523);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(462, 498);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // label1
@@ -107,15 +106,13 @@
             // 
             // customSettingsList
             // 
-            this.customSettingsList.CheckOnClick = true;
             this.tableLayoutPanel1.SetColumnSpan(this.customSettingsList, 2);
             this.customSettingsList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.customSettingsList.FormattingEnabled = true;
             this.customSettingsList.HorizontalScrollbar = true;
-            this.customSettingsList.IntegralHeight = false;
             this.customSettingsList.Location = new System.Drawing.Point(79, 61);
             this.customSettingsList.Name = "customSettingsList";
-            this.customSettingsList.Size = new System.Drawing.Size(380, 424);
+            this.customSettingsList.Size = new System.Drawing.Size(380, 399);
             this.customSettingsList.TabIndex = 4;
             this.customSettingsList.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.customSettingsList_ItemCheck);
             // 
@@ -127,7 +124,7 @@
             this.flowLayoutPanel1.Controls.Add(this.checkAllButton);
             this.flowLayoutPanel1.Controls.Add(this.uncheckAllButton);
             this.flowLayoutPanel1.Controls.Add(this.resetToDefaultButton);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(206, 491);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(206, 466);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(253, 29);
             this.flowLayoutPanel1.TabIndex = 8;
@@ -252,7 +249,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "ComponentSettings";
             this.Padding = new System.Windows.Forms.Padding(7);
-            this.Size = new System.Drawing.Size(476, 537);
+            this.Size = new System.Drawing.Size(476, 512);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.flowLayoutPanel1.ResumeLayout(false);

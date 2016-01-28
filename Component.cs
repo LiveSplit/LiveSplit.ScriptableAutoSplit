@@ -91,13 +91,17 @@ namespace LiveSplit.UI.Components
                     
                     // New script
                     Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+
                     Script.RefreshRateChanged += Script_RefreshRateChanged;
                     Script_RefreshRateChanged(this, Script.RefreshRate);
 
                     Script.GameVersionChanged += Script_GameVersionChanged;
                     Settings.SetGameVersion(null);
 
-                    Settings.SetASLSettings(Script.GetSettings(State));
+                    // Give custom ASL settings to GUI, which populates the list and
+                    // stores the ASLSetting objects which are shared between the GUI
+                    // and ASLScript
+                    Settings.SetASLSettings(Script.RunStartup(State));
                 }
                 catch (Exception ex)
                 {

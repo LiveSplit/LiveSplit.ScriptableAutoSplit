@@ -56,7 +56,7 @@ public class CompiledScript
 	    return null;
     }}
 
-    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic addSetting)
+    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic AddSetting)
     {{
 	    { codePreInit }
 	    return null;
