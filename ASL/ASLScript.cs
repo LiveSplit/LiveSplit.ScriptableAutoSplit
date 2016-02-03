@@ -92,9 +92,9 @@ namespace LiveSplit.ASL
 
                 var stateProcess = States.Keys.Select(proccessName => new
                 {
-                    // default to first defined state in file (lazy)
-                    // TODO: default to the one with no version specified, if it exists
-                    State = States[proccessName].First(),
+                    // default to the state with no version specified, if it exists
+                    State = States[proccessName].FirstOrDefault(s => s.GameVersion == "")
+                        ?? States[proccessName].First(),
                     Process = Process.GetProcessesByName(proccessName).FirstOrDefault()
                 }).FirstOrDefault(x => x.Process != null);
 
@@ -103,7 +103,16 @@ namespace LiveSplit.ASL
                     initialized = false;
                     Game = stateProcess.Process;
                     State = stateProcess.State;
-                    debug("Connected to game: "+Game.ProcessName);
+                    if (State.GameVersion == "")
+                    {
+                        debug("Connected to game: {0} (using default state descriptor)", Game.ProcessName);
+                    }
+                    else
+                    {
+                        debug("Connected to game: {0} (state descriptor for version '{1}' chosen as default)",
+                            Game.ProcessName,
+                            State.GameVersion);
+                    }
                     init(lsState);
                 }
             }
@@ -174,29 +183,38 @@ namespace LiveSplit.ASL
             OldState = State;
             Version = string.Empty;
 
-            string ver = Version;
+            // Fetch version from init-method
+            string ver = string.Empty;
             runMethod(Init, lsState, ref ver);
 
             if (ver != Version)
             {
                 GameVersionChanged(this, ver);
-                var state =
+                Version = ver;
+                var versionState =
                     States.Where(kv => kv.Key.ToLower() == Game.ProcessName.ToLower())
                         .Select(kv => kv.Value)
                         .First() // states
                         .FirstOrDefault(s => s.GameVersion == ver);
-                if (state != null)
+                if (versionState != null)
                 {
-                    State = state;
-                    State.RefreshValues(Game);
-                    OldState = State;
-                    Version = ver;
-                    debug("Switched to version " + Version + " state");
+                    // This state descriptor may already be selected
+                    if (versionState != State)
+                    {
+                        State = versionState;
+                        State.RefreshValues(Game);
+                        OldState = State;
+                        debug("Switched to state descriptor for version '{0}'", Version);
+                    }
+                }
+                else
+                {
+                    debug("No state descriptor for version '{0}' (will keep using default one)", Version);
                 }
             }
 
             initialized = true;
-            debug("Initialized, ready to update values");
+            debug("Initialized, running main methods");
         }
 
         // This is executed repeatedly as long as the game is connected and initialized.
@@ -205,7 +223,11 @@ namespace LiveSplit.ASL
             OldState = State.RefreshValues(Game);
 
             string ver = Version;
-            runMethod(Update, lsState, ref ver);
+            if (!(runMethod(Update, lsState, ref ver) ?? true))
+            {
+                // If Update explicitly returns false, don't run anything else
+                return;
+            }
 
             if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
             {
@@ -242,16 +264,17 @@ namespace LiveSplit.ASL
                 {
                     if (Settings.MethodEnabled("start"))
                     {
-                        Console.WriteLine("Start");
                         Model.Start();
                     }
                 }
             }
         }
 
-        private void debug(string output)
+        private void debug(string output, params object[] args)
         {
-            Trace.WriteLine("[ASL] "+output);
+            Trace.WriteLine(String.Format("[ASL/{1}] {0}",
+                String.Format(output, args),
+                this.GetHashCode()));
         }
     }
 }

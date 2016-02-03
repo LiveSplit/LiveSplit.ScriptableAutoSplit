@@ -26,6 +26,10 @@ namespace LiveSplit.ASL
 
         public void AddSetting(string name, bool defaultValue, string description)
         {
+            if (description == null)
+            {
+                description = name;
+            }
             ASLSetting setting = new ASLSetting(name, defaultValue, description);
             Settings.Add(name, setting);
             OrderedSettings.Add(setting);
@@ -33,6 +37,8 @@ namespace LiveSplit.ASL
 
         public bool GetSettingValue(string name)
         {
+            // Don't cause error if setting doesn't exist, but still inform script
+            // author since that usually shouldn't happen.
             if (Settings.ContainsKey(name))
             {
                 return Settings[name].Value;

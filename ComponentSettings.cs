@@ -12,14 +12,14 @@ namespace LiveSplit.UI.Components
 
         private Dictionary<string, bool> _lastLoadedFromSettings;
         private Dictionary<string, bool> _defaultValues;
-        private Dictionary<object, ASL.ASLSetting> _methodSettings;
+        private Dictionary<object, ASL.ASLSetting> _basicSettings;
 
         public ComponentSettings()
         {
             InitializeComponent();
 
             ScriptPath = "";
-            _methodSettings = new Dictionary<object, ASL.ASLSetting>();
+            _basicSettings = new Dictionary<object, ASL.ASLSetting>();
 
             txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false, DataSourceUpdateMode.OnPropertyChanged);
         }
@@ -49,7 +49,6 @@ namespace LiveSplit.UI.Components
                 splitCheckbox.Checked = SettingsHelper.ParseBool(element["Split"], true);
                 parseCustomSettingsFromXml(element);
             }
-            Console.WriteLine("SetSettings #####"+element["Start"]);
         }
 
         // Sets the custom settings defined in the ASL script. Populates the CheckedListBox.
@@ -67,28 +66,27 @@ namespace LiveSplit.UI.Components
             updateItemsInList(_lastLoadedFromSettings);
             updateCustomSettingsVisibility();
 
-            updateBasicSettings(settings);
+            initBasicSettings(settings);
         }
 
-        private void updateBasicSettings(ASL.ASLSettings settings)
+        private void initBasicSettings(ASL.ASLSettings settings)
         {
-            _methodSettings.Clear();
-            updateBasicSetting(settings, startCheckbox, "start");
-            updateBasicSetting(settings, resetCheckbox, "reset");
-            updateBasicSetting(settings, splitCheckbox, "split");
+            _basicSettings.Clear();
+            initBasicSetting(settings, startCheckbox, "start");
+            initBasicSetting(settings, resetCheckbox, "reset");
+            initBasicSetting(settings, splitCheckbox, "split");
         }
 
-        private void updateBasicSetting(ASL.ASLSettings settings, CheckBox checkbox, string name)
+        private void initBasicSetting(ASL.ASLSettings settings, CheckBox checkbox, string name)
         {
-            //checkbox.DataBindings.Clear();
             if (settings.MethodPresent(name))
             {
                 ASL.ASLSetting setting = settings.MethodSettings[name];
-                //checkbox.DataBindings.Add("Checked", setting, "Value");
-                _methodSettings.Add(checkbox, setting);
+                _basicSettings.Add(checkbox, setting);
                 checkbox.Enabled = true;
                 setting.Value = checkbox.Checked;
-            } else
+            }
+            else
             {
                 checkbox.Enabled = false;
                 checkbox.Checked = false;
@@ -215,9 +213,9 @@ namespace LiveSplit.UI.Components
 
         private void methodCheckbox_CheckedChanged(object sender, EventArgs e)
         {
-            if (_methodSettings.ContainsKey(sender))
+            if (_basicSettings.ContainsKey(sender))
             {
-                _methodSettings[sender].Value = ((CheckBox)sender).Checked;
+                _basicSettings[sender].Value = ((CheckBox)sender).Checked;
             }
         }
 
