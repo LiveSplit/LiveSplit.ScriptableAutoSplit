@@ -103,9 +103,10 @@ namespace LiveSplit.UI.Components
             customSettingsLabel.Visible = show;
         }
 
-        // Updates the values of the CheckedListBox entries based on what was last loaded from
-        // the settings. This will implicitly also update the value in the ASLSetting
-        // object in the list.
+        // Updates the checked state of the CheckedListBox items based on the
+        // settingValues parameter. This will implicitly also update the value
+        // in the associated ASLSetting objects, which are shared with the ASL
+        // script.
         private void updateItemsInList(Dictionary<string, bool> settingValues)
         {
             if (settingValues == null)
@@ -167,7 +168,7 @@ namespace LiveSplit.UI.Components
 
         public void SetGameVersion(string version)
         {
-            gameVersion.Text = version != null ? "Game Version: " + version : "";
+            gameVersionLabel.Text = version != null ? "Game Version: " + version : "";
         }
 
         private void btnSelectFile_Click(object sender, EventArgs e)
@@ -187,7 +188,6 @@ namespace LiveSplit.UI.Components
             ASL.ASLSetting setting = (ASL.ASLSetting)customSettingsList.Items[e.Index];
             // Update value in the ASLSetting object, which also changes it in the ASL script
             setting.Value = e.NewValue == CheckState.Checked;
-            //Console.WriteLine(((CheckedListBox)sender).Items[e.Index] + " " + e.NewValue);
         }
 
         private void checkAllButton_Click(object sender, EventArgs e)

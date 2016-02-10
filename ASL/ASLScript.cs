@@ -135,7 +135,7 @@ namespace LiveSplit.ASL
             return result;
         }
 
-        // Run startup and return settings defined in ASL script
+        // Run startup and return settings defined in ASL script.
         public ASLSettings RunStartup(LiveSplitState lsState)
         {
             debug("Running startup");
