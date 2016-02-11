@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiveSplit.Options;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -22,12 +23,15 @@ namespace LiveSplit.UI.Components
             _basicSettings = new Dictionary<object, ASL.ASLSetting>();
 
             txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false, DataSourceUpdateMode.OnPropertyChanged);
+
+            SetGameVersion(null);
+            updateCustomSettingsVisibility();
         }
 
         public XmlNode GetSettings(XmlDocument document)
         {
             var settingsNode = document.CreateElement("Settings");
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", "1.4"));
+            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", "1.5"));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "ScriptPath", ScriptPath));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "Start", startCheckbox.Checked));
             settingsNode.AppendChild(SettingsHelper.ToElement(document, "Reset", resetCheckbox.Checked));
@@ -95,7 +99,7 @@ namespace LiveSplit.UI.Components
 
         private void updateCustomSettingsVisibility()
         {
-            bool show = _defaultValues.Count > 0;
+            bool show = _defaultValues != null && _defaultValues.Count > 0;
             customSettingsList.Visible = show;
             resetToDefaultButton.Visible = show;
             checkAllButton.Visible = show;
@@ -134,7 +138,10 @@ namespace LiveSplit.UI.Components
                 var setting = (ASL.ASLSetting)item;
                 XmlElement element = SettingsHelper.ToElement(document, "Setting", setting.Value);
                 XmlAttribute id = SettingsHelper.ToAttribute(document, "id", setting.Name);
+                // In case there are other setting types in the future
+                XmlAttribute type = SettingsHelper.ToAttribute(document, "type", "bool");
                 element.Attributes.Append(id);
+                element.Attributes.Append(type);
                 aslParent.AppendChild(element);
             }
             parent.AppendChild(aslParent);
@@ -153,9 +160,10 @@ namespace LiveSplit.UI.Components
                     if (element.Name == "Setting")
                     {
                         string id = element.Attributes["id"].Value;
-                        bool value = SettingsHelper.ParseBool(element);
-                        if (id != null)
+                        string type = element.Attributes["type"].Value;
+                        if (id != null && type == "bool")
                         {
+                            bool value = SettingsHelper.ParseBool(element);
                             result.Add(id, value);
                         }
                     }

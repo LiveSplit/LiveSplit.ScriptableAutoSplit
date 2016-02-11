@@ -77,31 +77,25 @@ namespace LiveSplit.UI.Components
 
         protected void UpdateScript()
         {
+            // Disable timer, to wait for execution of this iteration to finish
+            UpdateTimer.Enabled = false;
+
             // this is ugly, fix eventually!
-            if (Settings.ScriptPath != OldScriptPath && !string.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
+            if (Settings.ScriptPath != OldScriptPath || DoReload)
             {
                 try
                 {
                     DoReload = false;
                     OldScriptPath = Settings.ScriptPath;
-                    FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
-                    FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
-                    FSWatcher.EnableRaisingEvents = true;
-                    scriptCleanup();
-                    
-                    // New script
-                    Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
-
-                    Script.RefreshRateChanged += Script_RefreshRateChanged;
-                    Script_RefreshRateChanged(this, Script.RefreshRate);
-
-                    Script.GameVersionChanged += Script_GameVersionChanged;
-                    Settings.SetGameVersion(null);
-
-                    // Give custom ASL settings to GUI, which populates the list and
-                    // stores the ASLSetting objects which are shared between the GUI
-                    // and ASLScript
-                    Settings.SetASLSettings(Script.RunStartup(State));
+                    if (string.IsNullOrEmpty(Settings.ScriptPath))
+                    {
+                        scriptCleanup();
+                        FSWatcher.EnableRaisingEvents = false;
+                    }
+                    else
+                    {
+                        loadScript();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -120,6 +114,30 @@ namespace LiveSplit.UI.Components
                     Log.Error(ex);
                 }
             }
+            UpdateTimer.Enabled = true;
+        }
+
+        private void loadScript()
+        {
+            scriptCleanup();
+
+            FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
+            FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
+            FSWatcher.EnableRaisingEvents = true;
+
+            // New script
+            Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+
+            Script.RefreshRateChanged += Script_RefreshRateChanged;
+            Script_RefreshRateChanged(this, Script.RefreshRate);
+
+            Script.GameVersionChanged += Script_GameVersionChanged;
+            Settings.SetGameVersion(null);
+
+            // Give custom ASL settings to GUI, which populates the list and
+            // stores the ASLSetting objects which are shared between the GUI
+            // and ASLScript
+            Settings.SetASLSettings(Script.RunStartup(State));
         }
 
         private void scriptCleanup()
@@ -129,6 +147,9 @@ namespace LiveSplit.UI.Components
                 Script.RefreshRateChanged -= Script_RefreshRateChanged;
                 Script.GameVersionChanged -= Script_GameVersionChanged;
                 Script.RunShutdown(State);
+                Settings.SetGameVersion(null);
+                Settings.SetASLSettings(new ASLSettings());
+                Script = null;
             }
         }
 

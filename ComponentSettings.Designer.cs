@@ -124,9 +124,9 @@
             this.flowLayoutPanel1.Controls.Add(this.checkAllButton);
             this.flowLayoutPanel1.Controls.Add(this.uncheckAllButton);
             this.flowLayoutPanel1.Controls.Add(this.resetToDefaultButton);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(206, 466);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(205, 466);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(253, 29);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(254, 29);
             this.flowLayoutPanel1.TabIndex = 8;
             // 
             // checkAllButton
@@ -135,7 +135,7 @@
             this.checkAllButton.Name = "checkAllButton";
             this.checkAllButton.Size = new System.Drawing.Size(62, 23);
             this.checkAllButton.TabIndex = 5;
-            this.checkAllButton.Text = "Check all";
+            this.checkAllButton.Text = "Check All";
             this.checkAllButton.UseVisualStyleBackColor = true;
             this.checkAllButton.Click += new System.EventHandler(this.checkAllButton_Click);
             // 
@@ -145,16 +145,16 @@
             this.uncheckAllButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.uncheckAllButton.Location = new System.Drawing.Point(71, 3);
             this.uncheckAllButton.Name = "uncheckAllButton";
-            this.uncheckAllButton.Size = new System.Drawing.Size(74, 23);
+            this.uncheckAllButton.Size = new System.Drawing.Size(75, 23);
             this.uncheckAllButton.TabIndex = 6;
-            this.uncheckAllButton.Text = "Uncheck all";
+            this.uncheckAllButton.Text = "Uncheck All";
             this.uncheckAllButton.UseVisualStyleBackColor = true;
             this.uncheckAllButton.Click += new System.EventHandler(this.uncheckAllButton_Click);
             // 
             // resetToDefaultButton
             // 
             this.resetToDefaultButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.resetToDefaultButton.Location = new System.Drawing.Point(151, 3);
+            this.resetToDefaultButton.Location = new System.Drawing.Point(152, 3);
             this.resetToDefaultButton.Name = "resetToDefaultButton";
             this.resetToDefaultButton.Size = new System.Drawing.Size(99, 23);
             this.resetToDefaultButton.TabIndex = 7;
