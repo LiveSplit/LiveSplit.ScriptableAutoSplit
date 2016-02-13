@@ -48,7 +48,7 @@ public class CompiledScript
     {{
         Trace.WriteLine(s);
     }}
-    public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game, dynamic Enabled)
+    public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game, dynamic settings)
     {{
         var memory = game;
         var modules = game.ModulesWow64Safe();
@@ -56,7 +56,7 @@ public class CompiledScript
 	    return null;
     }}
 
-    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic AddSetting)
+    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic settings)
     {{
 	    { codePreInit }
 	    return null;
@@ -102,13 +102,7 @@ public class CompiledScript
             // dynamic args can't be ref or out, this is a workaround
             CompiledCode.version = version;
             CompiledCode.refreshRate = refreshRate;
-
-            Func<string, bool> getSetting = (name) =>
-            {
-                return settings.GetSettingValue(name);
-            };
-
-            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game, getSetting);
+            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game, settings.Reader);
             version = CompiledCode.version;
             refreshRate = CompiledCode.refreshRate;
             return ret;
@@ -120,13 +114,7 @@ public class CompiledScript
             // dynamic args can't be ref or out, this is a workaround
             CompiledCode.version = version;
             CompiledCode.refreshRate = refreshRate;
-
-            Action<string, bool, string> addSetting = (name, value, label) =>
-            {
-                settings.AddSetting(name, value, label);
-            };
-
-            var ret = CompiledCode.Execute(timer, vars, addSetting);
+            var ret = CompiledCode.Execute(timer, vars, settings.Builder);
             version = CompiledCode.version;
             refreshRate = CompiledCode.refreshRate;
             return ret;

@@ -7,6 +7,7 @@ using System.IO;
 using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.Options;
+using System.Diagnostics;
 
 namespace LiveSplit.UI.Components
 {
@@ -68,16 +69,19 @@ namespace LiveSplit.UI.Components
 
         public override void Dispose()
         {
+            scriptCleanup();
+
             if (FSWatcher != null)
                 FSWatcher.Dispose();
             if (UpdateTimer != null)
                 UpdateTimer.Dispose();
-            scriptCleanup();
         }
 
         protected void UpdateScript()
         {
-            // Disable timer, to wait for execution of this iteration to finish
+            // Disable timer, to wait for execution of this iteration to
+            // finish. This can be useful if blocking operations like
+            // showing a message window are used.
             UpdateTimer.Enabled = false;
 
             // this is ugly, fix eventually!
@@ -87,9 +91,12 @@ namespace LiveSplit.UI.Components
                 {
                     DoReload = false;
                     OldScriptPath = Settings.ScriptPath;
+
+                    scriptCleanup();
                     if (string.IsNullOrEmpty(Settings.ScriptPath))
                     {
-                        scriptCleanup();
+                        // Only disable file watcher if script path changed to empty
+                        // (otherwise detecting file changes may still be wanted)
                         FSWatcher.EnableRaisingEvents = false;
                     }
                     else
@@ -119,7 +126,7 @@ namespace LiveSplit.UI.Components
 
         private void loadScript()
         {
-            scriptCleanup();
+            Trace.WriteLine("[ASL] Loading new script: "+Settings.ScriptPath);
 
             FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
             FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
@@ -137,19 +144,41 @@ namespace LiveSplit.UI.Components
             // Give custom ASL settings to GUI, which populates the list and
             // stores the ASLSetting objects which are shared between the GUI
             // and ASLScript
-            Settings.SetASLSettings(Script.RunStartup(State));
+            try
+            {
+                ASL.ASLSettings settingsFromASL = Script.RunStartup(State);
+                Settings.SetASLSettings(settingsFromASL);
+            }
+            catch (Exception ex)
+            {
+                // Script already created, but startup failed, so clean up again
+                Log.Error(ex);
+                scriptCleanup();
+            }
         }
 
         private void scriptCleanup()
         {
             if (Script != null)
             {
-                Script.RefreshRateChanged -= Script_RefreshRateChanged;
-                Script.GameVersionChanged -= Script_GameVersionChanged;
-                Script.RunShutdown(State);
-                Settings.SetGameVersion(null);
-                Settings.SetASLSettings(new ASLSettings());
-                Script = null;
+                try
+                {
+                    Script.RefreshRateChanged -= Script_RefreshRateChanged;
+                    Script.GameVersionChanged -= Script_GameVersionChanged;
+                    Settings.SetGameVersion(null);
+                    Settings.SetASLSettings(new ASLSettings());
+                    Script.RunShutdown(State);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+                finally
+                {
+                    // Script should no longer be used, even in case of error
+                    // (which the ASL shutdown method may contain)
+                    Script = null;
+                }
             }
         }
 

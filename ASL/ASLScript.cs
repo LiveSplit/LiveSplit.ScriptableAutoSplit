@@ -69,15 +69,15 @@ namespace LiveSplit.ASL
 
             if (!Start.IsEmpty)
             {
-                Settings.AddMethodSetting("start");
+                Settings.AddBasicSetting("start");
             }
             if (!Split.IsEmpty)
             {
-                Settings.AddMethodSetting("split");
+                Settings.AddBasicSetting("split");
             }
             if (!Reset.IsEmpty)
             {
-                Settings.AddMethodSetting("reset");
+                Settings.AddBasicSetting("reset");
             }
 
             UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
@@ -244,14 +244,14 @@ namespace LiveSplit.ASL
 
                 if (runMethod(Reset, lsState, ref ver) ?? false)
                 {
-                    if (Settings.MethodEnabled("reset"))
+                    if (Settings.GetBasicSettingValue("reset"))
                     {
                         Model.Reset();
                     }
                 }
                 else if (runMethod(Split, lsState, ref ver) ?? false)
                 {
-                    if (Settings.MethodEnabled("split"))
+                    if (Settings.GetBasicSettingValue("split"))
                     {
                         Model.Split();
                     }
@@ -262,7 +262,7 @@ namespace LiveSplit.ASL
             {
                 if (runMethod(Start, lsState, ref ver) ?? false)
                 {
-                    if (Settings.MethodEnabled("start"))
+                    if (Settings.GetBasicSettingValue("start"))
                     {
                         Model.Start();
                     }
