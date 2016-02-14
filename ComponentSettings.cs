@@ -195,7 +195,11 @@ namespace LiveSplit.UI.Components
                     ASL.ASLSetting setting = settings.BasicSettings[name];
                     checkbox.Enabled = true;
                     checkbox.Tag = setting;
-                    bool value = _basicSettingsFromXml[name];
+                    bool value = true;
+                    if (_basicSettingsFromXml.ContainsKey(name))
+                    {
+                        value = _basicSettingsFromXml[name];
+                    }
                     checkbox.Checked = value;
                     setting.Value = value;
                 }
@@ -303,7 +307,6 @@ namespace LiveSplit.UI.Components
             if (setting != null)
             {
                 setting.Value = checkbox.Checked;
-                Console.WriteLine("changed"+setting.Value);
             }
         }
 
@@ -312,7 +315,6 @@ namespace LiveSplit.UI.Components
             // Update value in the ASLSetting object, which also changes it in the ASL script
             ASL.ASLSetting setting = (ASL.ASLSetting)e.Node.Tag;
             setting.Value = e.Node.Checked;
-            Console.WriteLine("Checked: "+setting+" "+setting.Value);
 
             // Only change color of childnodes if this node isn't already grayed out
             if (e.Node.ForeColor != SystemColors.GrayText) 

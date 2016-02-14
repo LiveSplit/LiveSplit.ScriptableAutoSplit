@@ -4,8 +4,8 @@
     // Created from the ASL script and shared with the GUI to synchronize setting state.
     public class ASLSetting
     {
-        public string Id { get; set; }
-        public string Label { get; set; }
+        public string Id { get; }
+        public string Label { get; }
         public bool Value { get; set; }
         public string Parent { get; }
 
