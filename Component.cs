@@ -7,6 +7,7 @@ using System.IO;
 using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.Options;
+using System.Diagnostics;
 
 namespace LiveSplit.UI.Components
 {
@@ -16,6 +17,7 @@ namespace LiveSplit.UI.Components
 
         public override string ComponentName => "Scriptable Auto Splitter";
 
+        protected LiveSplitState State { get; }
         protected string OldScriptPath { get; set; }
         protected FileSystemWatcher FSWatcher { get; set; }
         protected bool DoReload { get; set; }
@@ -36,11 +38,12 @@ namespace LiveSplit.UI.Components
 
         public Component(LiveSplitState state)
         {
+            State = state;
             Settings = new ComponentSettings();
             FSWatcher = new FileSystemWatcher();
             FSWatcher.Changed += (sender, args) => DoReload = true;
             UpdateTimer = new Timer() { Interval = 15 }; // run a little faster than 60hz
-            UpdateTimer.Tick += (sender, args) => UpdateScript(state);
+            UpdateTimer.Tick += (sender, args) => UpdateScript();
             UpdateTimer.Enabled = true;
         }
 
@@ -66,31 +69,40 @@ namespace LiveSplit.UI.Components
 
         public override void Dispose()
         {
+            scriptCleanup();
+
             if (FSWatcher != null)
                 FSWatcher.Dispose();
             if (UpdateTimer != null)
                 UpdateTimer.Dispose();
-            if (Script != null)
-                Script.RefreshRateChanged -= Script_RefreshRateChanged;
         }
 
-        protected void UpdateScript(LiveSplitState state)
+        protected void UpdateScript()
         {
+            // Disable timer, to wait for execution of this iteration to
+            // finish. This can be useful if blocking operations like
+            // showing a message window are used.
+            UpdateTimer.Enabled = false;
+
             // this is ugly, fix eventually!
-            if (Settings.ScriptPath != OldScriptPath && !string.IsNullOrEmpty(Settings.ScriptPath) || DoReload)
+            if (Settings.ScriptPath != OldScriptPath || DoReload)
             {
                 try
                 {
                     DoReload = false;
                     OldScriptPath = Settings.ScriptPath;
-                    FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
-                    FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
-                    FSWatcher.EnableRaisingEvents = true;
-                    if (Script != null)
-                        Script.RefreshRateChanged -= Script_RefreshRateChanged;
-                    Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
-                    Script.RefreshRateChanged += Script_RefreshRateChanged;
-                    Script_RefreshRateChanged(this, Script.RefreshRate);
+
+                    scriptCleanup();
+                    if (string.IsNullOrEmpty(Settings.ScriptPath))
+                    {
+                        // Only disable file watcher if script path changed to empty
+                        // (otherwise detecting file changes may still be wanted)
+                        FSWatcher.EnableRaisingEvents = false;
+                    }
+                    else
+                    {
+                        loadScript();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -102,11 +114,70 @@ namespace LiveSplit.UI.Components
             {
                 try
                 {
-                    Script.RunUpdate(state);
+                    Script.RunUpdate(State);
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex);
+                }
+            }
+            UpdateTimer.Enabled = true;
+        }
+
+        private void loadScript()
+        {
+            Trace.WriteLine("[ASL] Loading new script: "+Settings.ScriptPath);
+
+            FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
+            FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
+            FSWatcher.EnableRaisingEvents = true;
+
+            // New script
+            Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+
+            Script.RefreshRateChanged += Script_RefreshRateChanged;
+            Script_RefreshRateChanged(this, Script.RefreshRate);
+
+            Script.GameVersionChanged += Script_GameVersionChanged;
+            Settings.SetGameVersion(null);
+
+            // Give custom ASL settings to GUI, which populates the list and
+            // stores the ASLSetting objects which are shared between the GUI
+            // and ASLScript
+            try
+            {
+                ASL.ASLSettings settingsFromASL = Script.RunStartup(State);
+                Settings.SetASLSettings(settingsFromASL);
+            }
+            catch (Exception ex)
+            {
+                // Script already created, but startup failed, so clean up again
+                Log.Error(ex);
+                scriptCleanup();
+            }
+        }
+
+        private void scriptCleanup()
+        {
+            if (Script != null)
+            {
+                try
+                {
+                    Script.RefreshRateChanged -= Script_RefreshRateChanged;
+                    Script.GameVersionChanged -= Script_GameVersionChanged;
+                    Settings.SetGameVersion(null);
+                    Settings.SetASLSettings(new ASLSettings());
+                    Script.RunShutdown(State);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+                finally
+                {
+                    // Script should no longer be used, even in case of error
+                    // (which the ASL shutdown method may contain)
+                    Script = null;
                 }
             }
         }
@@ -114,6 +185,11 @@ namespace LiveSplit.UI.Components
         private void Script_RefreshRateChanged(object sender, double e)
         {
             UpdateTimer.Interval = (int)Math.Round(1000 / e);
+        }
+
+        private void Script_GameVersionChanged(object sender, string version)
+        {
+            Settings.SetGameVersion(version);
         }
     }
 }
