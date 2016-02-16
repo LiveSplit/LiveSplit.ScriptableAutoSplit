@@ -12,10 +12,20 @@ namespace LiveSplit.UI.Components
     {
         public string ScriptPath { get; set; }
 
-        private Dictionary<string, bool> _customSettingsFromXml;
+        // Save the state of settings independant of actual ASLSetting
+        // objects (which are specific to the loaded ASL Script instance).
+        //
+        // This is used to restore the correct state when the ASL
+        // Script is first loaded or reloaded.
+        private Dictionary<string, bool> _basicSettingsState;
+        private Dictionary<string, bool> _customSettingsState;
+
+        // For resetting to default values. This could also be handled
+        // in a field in ASLSetting, but this dict can be used with the
+        // same method to update the tree as _customSettingsState.
         private Dictionary<string, bool> _defaultValues;
+
         private Dictionary<string, CheckBox> _basicSettings;
-        private Dictionary<string, bool> _basicSettingsFromXml;
 
         public ComponentSettings()
         {
@@ -33,7 +43,9 @@ namespace LiveSplit.UI.Components
             _basicSettings["Start"] = checkboxStart;
             _basicSettings["Reset"] = checkboxReset;
             _basicSettings["Split"] = checkboxSplit;
-            _basicSettingsFromXml = new Dictionary<string, bool>();
+            _basicSettingsState = new Dictionary<string, bool>();
+
+            _customSettingsState = new Dictionary<string, bool>();
         }
 
         public XmlNode GetSettings(XmlDocument document)
@@ -103,7 +115,7 @@ namespace LiveSplit.UI.Components
             {
                 bool value = SettingsHelper.ParseBool(element[item.Key], true);
                 item.Value.Checked = value;
-                _basicSettingsFromXml[item.Key.ToLower()] = value;
+                _basicSettingsState[item.Key.ToLower()] = value;
             }
         }
 
@@ -131,9 +143,9 @@ namespace LiveSplit.UI.Components
                     }
                 }
             }
-            _customSettingsFromXml = result;
-            // Update from settings when loaded (in case the list is already populated)
-            updateNodeCheckedState(_customSettingsFromXml);
+            _customSettingsState = result;
+            // Update tree with loaded state (in case the tree is already populated)
+            updateNodeCheckedState(_customSettingsState);
         }
 
         public void SetGameVersion(string version)
@@ -174,8 +186,8 @@ namespace LiveSplit.UI.Components
             }
             _defaultValues = values;
 
-            // Update from XML (in case settings are already loaded, which should be the case)
-            updateNodeCheckedState(_customSettingsFromXml);
+            // Update from saved state (from XML or stored between script reloads)
+            updateNodeCheckedState(_customSettingsState);
 
             treeCustomSettings.ExpandAll();
             treeCustomSettings.EndUpdate();
@@ -196,9 +208,9 @@ namespace LiveSplit.UI.Components
                     checkbox.Enabled = true;
                     checkbox.Tag = setting;
                     bool value = true;
-                    if (_basicSettingsFromXml.ContainsKey(name))
+                    if (_basicSettingsState.ContainsKey(name))
                     {
-                        value = _basicSettingsFromXml[name];
+                        value = _basicSettingsState[name];
                     }
                     checkbox.Checked = value;
                     setting.Value = value;
@@ -300,6 +312,7 @@ namespace LiveSplit.UI.Components
                 ScriptPath = txtScriptPath.Text = dialog.FileName;
         }
 
+        // Basic Setting checked/unchecked
         private void methodCheckbox_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox checkbox = (CheckBox)sender;
@@ -307,14 +320,17 @@ namespace LiveSplit.UI.Components
             if (setting != null)
             {
                 setting.Value = checkbox.Checked;
+                _basicSettingsState[setting.Id] = setting.Value;
             }
         }
 
+        // Custom Setting checked/unchecked
         private void settingsTree_AfterCheck(object sender, TreeViewEventArgs e)
         {
             // Update value in the ASLSetting object, which also changes it in the ASL script
             ASL.ASLSetting setting = (ASL.ASLSetting)e.Node.Tag;
             setting.Value = e.Node.Checked;
+            _customSettingsState[setting.Id] = setting.Value;
 
             // Only change color of childnodes if this node isn't already grayed out
             if (e.Node.ForeColor != SystemColors.GrayText) 

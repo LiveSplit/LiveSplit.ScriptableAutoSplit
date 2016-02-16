@@ -133,6 +133,30 @@ namespace LiveSplit.ASL
                 return s.GetSettingValue(id);
             }
         }
+
+        public bool StartEnabled
+        {
+            get
+            {
+                return s.GetBasicSettingValue("start");
+            }
+        }
+
+        public bool ResetEnabled
+        {
+            get
+            {
+                return s.GetBasicSettingValue("reset");
+            }
+        }
+
+        public bool SplitEnabled
+        {
+            get
+            {
+                return s.GetBasicSettingValue("split");
+            }
+        }
     }
 
 }
