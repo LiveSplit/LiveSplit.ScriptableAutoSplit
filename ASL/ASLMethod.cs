@@ -38,6 +38,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using LiveSplit.ComponentUtil;
 using LiveSplit.Model;
 public class CompiledScript
