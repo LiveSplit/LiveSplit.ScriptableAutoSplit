@@ -95,7 +95,7 @@ namespace LiveSplit.ASL
                     // default to the state with no version specified, if it exists
                     State = States[proccessName].FirstOrDefault(s => s.GameVersion == "")
                         ?? States[proccessName].First(),
-                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault()
+                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault(x => !x.HasExited)
                 }).FirstOrDefault(x => x.Process != null);
 
                 if (stateProcess != null)
