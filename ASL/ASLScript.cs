@@ -1,276 +1,288 @@
-﻿using LiveSplit.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
+using LiveSplit.Model;
 
 namespace LiveSplit.ASL
 {
-    public class ASLScript
+    public class ASLScript : IDisposable
     {
-        protected TimerModel Model { get; set; }
-        protected Process Game { get; set; }
-        private bool initialized = false;
-        public ASLState OldState { get; set; }
-        public ASLState State { get; set; }
-        public Dictionary<string, List<ASLState>> States { get; set; } // TODO: don't use dict
-        public ExpandoObject Vars { get; set; }
-        public string Version { get; set; }
-        private double refreshRate = 1000 / 15d;
-        public double RefreshRate
+        public class Methods
         {
-            get { return refreshRate; }
-            set
-            {
-                if (RefreshRateChanged != null && value != refreshRate)
-                    RefreshRateChanged(this, value);
-                refreshRate = value;
-            }
+            private static ASLMethod no_op = new ASLMethod("");
+
+            public ASLMethod startup = no_op;
+            public ASLMethod shutdown = no_op;
+            public ASLMethod init = no_op;
+            public ASLMethod exit = no_op;
+            public ASLMethod update = no_op;
+            public ASLMethod start = no_op;
+            public ASLMethod split = no_op;
+            public ASLMethod reset = no_op;
+            public ASLMethod isLoading = no_op;
+            public ASLMethod gameTime = no_op;
         }
-        public ASLSettings Settings { get; set; }
-
-        public ASLMethod Init { get; set; }
-        public ASLMethod Update { get; set; }
-        public ASLMethod Start { get; set; }
-        public ASLMethod Split { get; set; }
-        public ASLMethod Reset { get; set; }
-        public ASLMethod IsLoading { get; set; }
-        public ASLMethod GameTime { get; set; }
-        public ASLMethod Startup { get; set; }
-        public ASLMethod Shutdown { get; set; }
-
-        public bool UsesGameTime { get; private set; }
 
         public event EventHandler<double> RefreshRateChanged;
         public event EventHandler<string> GameVersionChanged;
 
-        public ASLScript(
-            Dictionary<string, List<ASLState>> states,
-            ASLMethod init, ASLMethod update,
-            ASLMethod start, ASLMethod split,
-            ASLMethod reset, ASLMethod isLoading,
-            ASLMethod gameTime, ASLMethod startup,
-            ASLMethod shutdown)
+        private string _game_version = string.Empty;
+        public string GameVersion
         {
-            Settings = new ASLSettings();
-
-            States = states;
-            Vars = new ExpandoObject();
-            Init = init ?? new ASLMethod("");
-            Update = update ?? new ASLMethod("");
-            Start = start ?? new ASLMethod("");
-            Split = split ?? new ASLMethod("");
-            Reset = reset ?? new ASLMethod("");
-            IsLoading = isLoading ?? new ASLMethod("");
-            GameTime = gameTime ?? new ASLMethod("");
-            Startup = startup ?? new ASLMethod("");
-            Shutdown = shutdown ?? new ASLMethod("");
-
-            if (!Start.IsEmpty)
+            get { return _game_version; }
+            set
             {
-                Settings.AddBasicSetting("start");
-            }
-            if (!Split.IsEmpty)
-            {
-                Settings.AddBasicSetting("split");
-            }
-            if (!Reset.IsEmpty)
-            {
-                Settings.AddBasicSetting("reset");
-            }
-
-            UsesGameTime = !IsLoading.IsEmpty || !GameTime.IsEmpty;
-            Version = string.Empty;
-        }
-
-        protected void TryConnect(LiveSplitState lsState)
-        {
-            if (Game == null || Game.HasExited)
-            {
-                Game = null;
-
-                var stateProcess = States.Keys.Select(proccessName => new
-                {
-                    // default to the state with no version specified, if it exists
-                    State = States[proccessName].FirstOrDefault(s => s.GameVersion == "")
-                        ?? States[proccessName].First(),
-                    Process = Process.GetProcessesByName(proccessName).FirstOrDefault(x => !x.HasExited)
-                }).FirstOrDefault(x => x.Process != null);
-
-                if (stateProcess != null)
-                {
-                    initialized = false;
-                    Game = stateProcess.Process;
-                    State = stateProcess.State;
-                    if (State.GameVersion == "")
-                    {
-                        debug("Connected to game: {0} (using default state descriptor)", Game.ProcessName);
-                    }
-                    else
-                    {
-                        debug("Connected to game: {0} (state descriptor for version '{1}' chosen as default)",
-                            Game.ProcessName,
-                            State.GameVersion);
-                    }
-                    init(lsState);
-                }
+                if (value != _game_version)
+                    GameVersionChanged?.Invoke(this, value);
+                _game_version = value;
             }
         }
 
-        private dynamic runMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
+        private double _refresh_rate = 1000 / 15d;
+        public double RefreshRate // per sec
         {
-            var refreshRate = RefreshRate;
-            var result = methodToRun.Run(lsState, OldState, State, Vars, Game, ref ver, ref refreshRate, Settings);
-            RefreshRate = refreshRate;
-            return result;
-        }
-
-        // Run method without counting on being connected to the game (startup/shutdown).
-        private dynamic runPreInitMethod(ASLMethod methodToRun, LiveSplitState lsState, ref string ver)
-        {
-            var refreshRate = RefreshRate;
-            var result = methodToRun.Run(lsState, Vars, ref ver, ref refreshRate, Settings);
-            RefreshRate = refreshRate;
-            return result;
-        }
-
-        // Run startup and return settings defined in ASL script.
-        public ASLSettings RunStartup(LiveSplitState lsState)
-        {
-            debug("Running startup");
-            string ver = Version;
-            runPreInitMethod(Startup, lsState, ref ver);
-            return Settings;
-        }
-
-        public void RunShutdown(LiveSplitState lsState)
-        {
-            debug("Running shutdown");
-            string ver = Version;
-            runPreInitMethod(Shutdown, lsState, ref ver);
-        }
-
-        public void RunUpdate(LiveSplitState lsState)
-        {
-            if (Game != null && !Game.HasExited)
+            get { return _refresh_rate; }
+            set
             {
-                if (!initialized)
-                {
-                    init(lsState);
-                }
-                else {
-                    update(lsState);
-                }
+                if (Math.Abs(value - _refresh_rate) > 0.01)
+                    RefreshRateChanged?.Invoke(this, value);
+                _refresh_rate = value;
+            }
+        }
+
+        private bool _uses_game_time;
+        private bool _init_completed;
+
+        private ASLSettings _settings;
+
+        private ExpandoObject _vars;
+        private Process _game;
+        private TimerModel _timer;
+
+        private Dictionary<string, List<ASLState>> _states;
+        private ASLState _state;
+        private ASLState _old_state;
+
+        private Methods _methods;
+
+        public ASLScript(Methods methods, Dictionary<string, List<ASLState>> states)
+        {
+            _methods = methods;
+            _states = states;
+
+            _settings = new ASLSettings();
+            _vars = new ExpandoObject();
+
+            if (!_methods.start.IsEmpty)
+                _settings.AddBasicSetting("start");
+            if (!_methods.split.IsEmpty)
+                _settings.AddBasicSetting("split");
+            if (!_methods.reset.IsEmpty)
+                _settings.AddBasicSetting("reset");
+
+            _uses_game_time = !_methods.isLoading.IsEmpty || !_methods.gameTime.IsEmpty;
+        }
+
+        public void Dispose()
+        {
+            RefreshRateChanged = null;
+            GameVersionChanged = null;
+        }
+
+        // Update the script
+        public void Update(LiveSplitState state)
+        {
+            if (_game == null)
+            {
+                if (_timer == null)
+                    _timer = new TimerModel() { CurrentState = state };
+                TryConnect(state);
+            }
+            else if (_game.HasExited)
+            {
+                DoExit(state);
             }
             else
             {
-                if (Model == null)
-                {
-                    Model = new TimerModel() { CurrentState = lsState };
-                }
-                TryConnect(lsState);
+                if (!_init_completed)
+                    DoInit(state);
+                else
+                    DoUpdate(state);
             }
+        }
+
+        // Run startup and return settings defined in ASL script.
+        public ASLSettings RunStartup(LiveSplitState state)
+        {
+            Debug("Running startup");
+            RunNoProcessMethod(_methods.startup, state, true);                                                         
+            return _settings;
+        }
+
+        public void RunShutdown(LiveSplitState state)
+        {
+            Debug("Running shutdown");
+            RunNoProcessMethod(_methods.shutdown, state);
+        }
+
+
+        private void TryConnect(LiveSplitState state)
+        {
+            _game = null;
+
+            var state_process = _states.Keys.Select(proccessName => new
+            {
+                // default to the state with no version specified, if it exists
+                State = _states[proccessName].FirstOrDefault(s => s.GameVersion == "") ?? _states[proccessName].First(),
+                Process = Process.GetProcessesByName(proccessName).FirstOrDefault(x => !x.HasExited)
+            }).FirstOrDefault(x => x.Process != null);
+
+            if (state_process == null)
+                return;
+
+            _init_completed = false;
+            _game = state_process.Process;
+            _state = state_process.State;
+
+            if (_state.GameVersion == "")
+            {
+                Debug("Connected to game: {0} (using default state descriptor)", _game.ProcessName);
+            }
+            else
+            {
+                Debug("Connected to game: {0} (state descriptor for version '{1}' chosen as default)",
+                    _game.ProcessName,
+                    _state.GameVersion);
+            }
+
+            DoInit(state);
         }
 
         // This is executed each time after connecting to the game (usually just once,
         // unless an error occurs before the method finishes).
-        private void init(LiveSplitState lsState)
+        private void DoInit(LiveSplitState state)
         {
-            debug("Initializing");
+            Debug("Initializing");
 
-            State.RefreshValues(Game);
-            OldState = State;
-            Version = string.Empty;
+            _state.RefreshValues(_game);
+            _old_state = _state;
+            GameVersion = string.Empty;
 
             // Fetch version from init-method
-            string ver = string.Empty;
-            runMethod(Init, lsState, ref ver);
+            var ver = string.Empty;
+            RunMethod(_methods.init, state, ref ver);
 
-            if (ver != Version)
+            if (ver != GameVersion)
             {
-                GameVersionChanged(this, ver);
-                Version = ver;
-                var versionState =
-                    States.Where(kv => kv.Key.ToLower() == Game.ProcessName.ToLower())
-                        .Select(kv => kv.Value)
-                        .First() // states
-                        .FirstOrDefault(s => s.GameVersion == ver);
-                if (versionState != null)
+                GameVersion = ver;
+
+                var version_state = _states.Where(kv => kv.Key.ToLower() == _game.ProcessName.ToLower())
+                    .Select(kv => kv.Value)
+                    .First() // states
+                    .FirstOrDefault(s => s.GameVersion == ver);
+
+                if (version_state != null)
                 {
                     // This state descriptor may already be selected
-                    if (versionState != State)
+                    if (version_state != _state)
                     {
-                        State = versionState;
-                        State.RefreshValues(Game);
-                        OldState = State;
-                        debug("Switched to state descriptor for version '{0}'", Version);
+                        _state = version_state;
+                        _state.RefreshValues(_game);
+                        _old_state = _state;
+                        Debug($"Switched to state descriptor for version '{GameVersion}'");
                     }
                 }
                 else
                 {
-                    debug("No state descriptor for version '{0}' (will keep using default one)", Version);
+                    Debug($"No state descriptor for version '{GameVersion}' (will keep using default one)");
                 }
             }
 
-            initialized = true;
-            debug("Initialized, running main methods");
+            _init_completed = true;
+            Debug("Init completed, running main methods");
+        }
+
+        private void DoExit(LiveSplitState state)
+        {
+            Debug("Running exit");
+            _game = null;
+            RunNoProcessMethod(_methods.exit, state);
         }
 
         // This is executed repeatedly as long as the game is connected and initialized.
-        private void update(LiveSplitState lsState)
+        private void DoUpdate(LiveSplitState state)
         {
-            OldState = State.RefreshValues(Game);
+            _old_state = _state.RefreshValues(_game);
 
-            string ver = Version;
-            if (!(runMethod(Update, lsState, ref ver) ?? true))
+            if (!(RunMethod(_methods.update, state) ?? true))
             {
                 // If Update explicitly returns false, don't run anything else
                 return;
             }
 
-            if (lsState.CurrentPhase == TimerPhase.Running || lsState.CurrentPhase == TimerPhase.Paused)
+            if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
             {
-                if (UsesGameTime && !lsState.IsGameTimeInitialized)
-                    Model.InitializeGameTime();
+                if (_uses_game_time && !state.IsGameTimeInitialized)
+                    _timer.InitializeGameTime();
 
-                var isPaused = runMethod(IsLoading, lsState, ref ver);
-                if (isPaused != null)
-                    lsState.IsGameTimePaused = isPaused;
+                var is_paused = RunMethod(_methods.isLoading, state);
+                if (is_paused != null)
+                    state.IsGameTimePaused = is_paused;
 
-                var gameTime = runMethod(GameTime, lsState, ref ver);
-                if (gameTime != null)
-                    lsState.SetGameTime(gameTime);
+                var game_time = RunMethod(_methods.gameTime, state);
+                if (game_time != null)
+                    state.SetGameTime(game_time);
 
-                if (runMethod(Reset, lsState, ref ver) ?? false)
+                if (RunMethod(_methods.reset, state) ?? false)
                 {
-                    if (Settings.GetBasicSettingValue("reset"))
-                    {
-                        Model.Reset();
-                    }
+                    if (_settings.GetBasicSettingValue("reset"))
+                        _timer.Reset();
                 }
-                else if (runMethod(Split, lsState, ref ver) ?? false)
+                else if (RunMethod(_methods.split, state) ?? false)
                 {
-                    if (Settings.GetBasicSettingValue("split"))
-                    {
-                        Model.Split();
-                    }
+                    if (_settings.GetBasicSettingValue("split"))
+                        _timer.Split();
                 }
             }
 
-            if (lsState.CurrentPhase == TimerPhase.NotRunning)
+            if (state.CurrentPhase == TimerPhase.NotRunning)
             {
-                if (runMethod(Start, lsState, ref ver) ?? false)
+                if (RunMethod(_methods.start, state) ?? false)
                 {
-                    if (Settings.GetBasicSettingValue("start"))
-                    {
-                        Model.Start();
-                    }
+                    if (_settings.GetBasicSettingValue("start"))
+                        _timer.Start();
                 }
             }
         }
 
-        private void debug(string output, params object[] args)
+        private dynamic RunMethod(ASLMethod method, LiveSplitState state, ref string version)
+        {
+            var refresh_rate = RefreshRate;
+            var result = method.Call(state, _vars, ref version, ref refresh_rate, _settings.Reader,
+                _old_state.Data, _state.Data, _game);
+            RefreshRate = refresh_rate;
+            return result;
+        }
+
+        private dynamic RunMethod(ASLMethod method, LiveSplitState state)
+        {
+            var version = GameVersion;
+            return RunMethod(method, state, ref version);
+        }
+
+        // Run method without counting on being connected to the game (startup/shutdown).
+        private void RunNoProcessMethod(ASLMethod method, LiveSplitState state, bool is_startup = false)
+        {
+            var refresh_rate = RefreshRate;
+            var version = GameVersion;
+            method.Call(state, _vars, ref version, ref refresh_rate,
+                is_startup ? _settings.Builder : (object)_settings.Reader);
+            RefreshRate = refresh_rate;
+        }
+
+        private void Debug(string output, params object[] args)
         {
             Trace.WriteLine(String.Format("[ASL/{1}] {0}",
                 String.Format(output, args),

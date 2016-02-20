@@ -1,32 +1,30 @@
-﻿using LiveSplit.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using LiveSplit.Model;
 
 namespace LiveSplit.ASL
 {
     public class ASLMethod
     {
-        protected dynamic CompiledCode { get; set; }
         public bool IsEmpty { get; }
 
-        public ASLMethod(string code) : this(code, false)
-        {
+        private dynamic _compiled_code;
 
-        }
-
-        public ASLMethod(string code, bool preInit)
+        public ASLMethod(string code)
         {
+            if (code == null)
+                throw new ArgumentNullException(nameof(code));
+
             IsEmpty = string.IsNullOrWhiteSpace(code);
             code = code.Replace("return;", "return null;"); // hack
 
-            // Decide if this code already has access to the game
-            var codeRegular = preInit ? "" : code;
-            var codePreInit = preInit ? code : "";
+            var options = new Dictionary<string, string> {
+                { "CompilerVersion", "v4.0" }
+            };
 
-            using (var provider =
-                new Microsoft.CSharp.CSharpCodeProvider(new Dictionary<string, string> { { "CompilerVersion", "v4.0" } }))
+            using (var provider = new Microsoft.CSharp.CSharpCodeProvider(options))
             {
                 string source = $@"
 using System;
@@ -52,23 +50,16 @@ public class CompiledScript
     public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game, dynamic settings)
     {{
         var memory = game;
-        var modules = game.ModulesWow64Safe();
-	    { codeRegular }
-	    return null;
-    }}
-
-    public dynamic Execute(LiveSplitState timer, dynamic vars, dynamic settings)
-    {{
-	    { codePreInit }
+        var modules = game != null ? game.ModulesWow64Safe() : null;
+	    { code }
 	    return null;
     }}
 }}";
 
-                var parameters = new System.CodeDom.Compiler.CompilerParameters()
-                    {
-                        GenerateInMemory = true,
-                        CompilerOptions = "/optimize /d:TRACE",
-                    };
+                var parameters = new System.CodeDom.Compiler.CompilerParameters() {
+                    GenerateInMemory = true,
+                    CompilerOptions = "/optimize /d:TRACE",
+                };
                 parameters.ReferencedAssemblies.Add("System.dll");
                 parameters.ReferencedAssemblies.Add("System.Core.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
@@ -89,37 +80,24 @@ public class CompiledScript
                     {
                         errorMessage += error + "\r\n";
                     }
-                    throw new ArgumentException(errorMessage, "code");
+                    throw new ArgumentException(errorMessage, nameof(code));
                 }
 
                 var type = res.CompiledAssembly.GetType("CompiledScript");
-                CompiledCode = Activator.CreateInstance(type);
+                _compiled_code = Activator.CreateInstance(type);
             }
         }
 
-        public dynamic Run(LiveSplitState timer, ASLState old, ASLState current, ExpandoObject vars, Process game, ref string version, ref double refreshRate,
-            ASLSettings settings)
+        public dynamic Call(LiveSplitState timer, ExpandoObject vars, ref string version, ref double refreshRate,
+            dynamic settings, ExpandoObject old = null, ExpandoObject current = null, Process game = null)
         {
             // dynamic args can't be ref or out, this is a workaround
-            CompiledCode.version = version;
-            CompiledCode.refreshRate = refreshRate;
-            var ret = CompiledCode.Execute(timer, old.Data, current.Data, vars, game, settings.Reader);
-            version = CompiledCode.version;
-            refreshRate = CompiledCode.refreshRate;
+            _compiled_code.version = version;
+            _compiled_code.refreshRate = refreshRate;
+            var ret = _compiled_code.Execute(timer, old, current, vars, game, settings);
+            version = _compiled_code.version;
+            refreshRate = _compiled_code.refreshRate;
             return ret;
         }
-
-        public dynamic Run(LiveSplitState timer, ExpandoObject vars, ref string version, ref double refreshRate,
-            ASLSettings settings)
-        {
-            // dynamic args can't be ref or out, this is a workaround
-            CompiledCode.version = version;
-            CompiledCode.refreshRate = refreshRate;
-            var ret = CompiledCode.Execute(timer, vars, settings.Builder);
-            version = CompiledCode.version;
-            refreshRate = CompiledCode.refreshRate;
-            return ret;
-        }
-
     }
 }

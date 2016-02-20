@@ -1,10 +1,9 @@
-﻿using LiveSplit.Options;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Xml;
+using LiveSplit.ASL;
 
 namespace LiveSplit.UI.Components
 {
@@ -17,45 +16,49 @@ namespace LiveSplit.UI.Components
         //
         // This is used to restore the correct state when the ASL
         // Script is first loaded or reloaded.
-        private Dictionary<string, bool> _basicSettingsState;
-        private Dictionary<string, bool> _customSettingsState;
+        private Dictionary<string, bool> _basic_settings_state;
+        private Dictionary<string, bool> _custom_settings_state;
 
         // For resetting to default values. This could also be handled
         // in a field in ASLSetting, but this dict can be used with the
         // same method to update the tree as _customSettingsState.
-        private Dictionary<string, bool> _defaultValues;
+        private Dictionary<string, bool> _default_values;
 
-        private Dictionary<string, CheckBox> _basicSettings;
+        private Dictionary<string, CheckBox> _basic_settings;
 
         public ComponentSettings()
         {
             InitializeComponent();
 
-            ScriptPath = "";
+            ScriptPath = string.Empty;
 
-            txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false, DataSourceUpdateMode.OnPropertyChanged);
+            this.txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false,
+                DataSourceUpdateMode.OnPropertyChanged);
 
             SetGameVersion(null);
-            updateCustomSettingsVisibility();
+            UpdateCustomSettingsVisibility();
 
-            _basicSettings = new Dictionary<string, CheckBox>();
-            // Capitalized names for saving it in XML.
-            _basicSettings["Start"] = checkboxStart;
-            _basicSettings["Reset"] = checkboxReset;
-            _basicSettings["Split"] = checkboxSplit;
-            _basicSettingsState = new Dictionary<string, bool>();
+            _basic_settings = new Dictionary<string, CheckBox> {
+                // Capitalized names for saving it in XML.
+                ["Start"] = checkboxStart,
+                ["Reset"] = checkboxReset,
+                ["Split"] = checkboxSplit
+            };
 
-            _customSettingsState = new Dictionary<string, bool>();
+            _basic_settings_state = new Dictionary<string, bool>();
+            _custom_settings_state = new Dictionary<string, bool>();
         }
 
         public XmlNode GetSettings(XmlDocument document)
         {
-            var settingsNode = document.CreateElement("Settings");
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "Version", "1.5"));
-            settingsNode.AppendChild(SettingsHelper.ToElement(document, "ScriptPath", ScriptPath));
-            appendBasicSettingsToXml(document, settingsNode);
-            appendCustomSettingsToXml(document, settingsNode);
-            return settingsNode;
+            XmlElement settings_node = document.CreateElement("Settings");
+
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "Version", "1.5"));
+            settings_node.AppendChild(SettingsHelper.ToElement(document, "ScriptPath", ScriptPath));
+            AppendBasicSettingsToXml(document, settings_node);
+            AppendCustomSettingsToXml(document, settings_node);
+
+            return settings_node;
         }
 
         // Loads the settings of this component from Xml. This might happen more than once
@@ -66,56 +69,114 @@ namespace LiveSplit.UI.Components
             if (!element.IsEmpty)
             {
                 ScriptPath = SettingsHelper.ParseString(element["ScriptPath"], string.Empty);
-                parseBasicSettingsFromXml(element);
-                parseCustomSettingsFromXml(element);
+                ParseBasicSettingsFromXml(element);
+                ParseCustomSettingsFromXml(element);
             }
         }
 
-        private void appendBasicSettingsToXml(XmlDocument document, XmlNode settingsNode)
+        public void SetGameVersion(string version)
         {
-            foreach (var item in _basicSettings)
+            this.lblGameVersion.Text = string.IsNullOrEmpty(version) ? "" : "Game Version: " + version;
+        }
+
+        /// <summary>
+        /// Populates the component with the settings defined in the ASL script.
+        /// </summary>
+        /// 
+        public void SetASLSettings(ASLSettings settings)
+        {
+            this.treeCustomSettings.BeginUpdate();
+            this.treeCustomSettings.Nodes.Clear();
+
+            var values = new Dictionary<string, bool>();
+
+            // Store temporary for easier lookup of parent nodes
+            var flat = new Dictionary<string, TreeNode>();
+
+            foreach (ASLSetting setting in settings.OrderedSettings)
             {
-                settingsNode.AppendChild(SettingsHelper.ToElement(document, item.Key, item.Value.Checked));
+                var node = new TreeNode(setting.Label) {
+                    Tag = setting,
+                    Checked = setting.Value
+                };
+
+                if (setting.Parent == null)
+                {
+                    this.treeCustomSettings.Nodes.Add(node);
+                }
+                else if (flat.ContainsKey(setting.Parent))
+                {
+                    flat[setting.Parent].Nodes.Add(node);
+                    flat[setting.Parent].ContextMenuStrip = this.treeContextMenu;
+                }
+
+                flat.Add(setting.Id, node);
+                values.Add(setting.Id, setting.Value);
+            }
+
+            _default_values = values;
+
+            // Update from saved state (from XML or stored between script reloads)
+            UpdateNodeCheckedState(_custom_settings_state);
+
+            treeCustomSettings.ExpandAll();
+            treeCustomSettings.EndUpdate();
+
+            UpdateCustomSettingsVisibility();
+            InitBasicSettings(settings);
+        }
+
+
+        private void AppendBasicSettingsToXml(XmlDocument document, XmlNode settings_node)
+        {
+            foreach (var item in _basic_settings)
+            {
+                settings_node.AppendChild(SettingsHelper.ToElement(document, item.Key, item.Value.Checked));
             }
         }
 
-        private void appendCustomSettingsToXml(XmlDocument document, XmlNode parent)
+        private void AppendCustomSettingsToXml(XmlDocument document, XmlNode parent)
         {
-            XmlElement aslParent = document.CreateElement("CustomSettings");
-            foreach (ASL.ASLSetting setting in getListOfCustomSettings())
+            XmlElement asl_parent = document.CreateElement("CustomSettings");
+
+            foreach (ASLSetting setting in GetListOfCustomSettings())
             {
                 XmlElement element = SettingsHelper.ToElement(document, "Setting", setting.Value);
                 XmlAttribute id = SettingsHelper.ToAttribute(document, "id", setting.Id);
                 // In case there are other setting types in the future
                 XmlAttribute type = SettingsHelper.ToAttribute(document, "type", "bool");
+
                 element.Attributes.Append(id);
                 element.Attributes.Append(type);
-                aslParent.AppendChild(element);
+                asl_parent.AppendChild(element);
             }
-            parent.AppendChild(aslParent);
+
+            parent.AppendChild(asl_parent);
         }
 
         /// <summary>
         /// Gets a flat list of all custom settings from the settings tree.
         /// </summary>
-        /// 
-        private List<ASL.ASLSetting> getListOfCustomSettings()
+        ///
+        private List<ASLSetting> GetListOfCustomSettings()
         {
-            List<ASL.ASLSetting> list = new List<ASL.ASLSetting>();
-            updateNodesInTree(node => {
-                list.Add((ASL.ASLSetting)node.Tag);
+            var list = new List<ASLSetting>();
+
+            UpdateNodesInTree(node => {
+                list.Add((ASLSetting)node.Tag);
                 return true;
-            }, treeCustomSettings.Nodes);
+            }, this.treeCustomSettings.Nodes);
+
             return list;
         }
 
-        private void parseBasicSettingsFromXml(XmlElement element)
+        private void ParseBasicSettingsFromXml(XmlElement element)
         {
-            foreach (var item in _basicSettings)
+            foreach (var item in _basic_settings)
             {
                 bool value = SettingsHelper.ParseBool(element[item.Key], true);
                 item.Value.Checked = value;
-                _basicSettingsState[item.Key.ToLower()] = value;
+                _basic_settings_state[item.Key.ToLower()] = value;
             }
         }
 
@@ -123,95 +184,51 @@ namespace LiveSplit.UI.Components
         /// Parses custom settings, stores them and updates the checked state of already added tree nodes.
         /// </summary>
         /// 
-        private void parseCustomSettingsFromXml(XmlElement data)
+        private void ParseCustomSettingsFromXml(XmlElement data)
         {
-            Dictionary<string, bool> result = new Dictionary<string, bool>();
-            XmlElement customSettingsNode = data["CustomSettings"];
-            if (customSettingsNode != null && customSettingsNode.HasChildNodes)
+            var result = new Dictionary<string, bool>();
+            XmlElement custom_settings_node = data["CustomSettings"];
+
+            if (custom_settings_node != null && custom_settings_node.HasChildNodes)
             {
-                foreach (XmlElement element in customSettingsNode.ChildNodes)
+                foreach (XmlElement element in custom_settings_node.ChildNodes)
                 {
-                    if (element.Name == "Setting")
+                    if (element.Name != "Setting")
+                        continue;
+
+                    string id = element.Attributes["id"].Value;
+                    string type = element.Attributes["type"].Value;
+
+                    if (id != null && type == "bool")
                     {
-                        string id = element.Attributes["id"].Value;
-                        string type = element.Attributes["type"].Value;
-                        if (id != null && type == "bool")
-                        {
-                            bool value = SettingsHelper.ParseBool(element);
-                            result.Add(id, value);
-                        }
+                        bool value = SettingsHelper.ParseBool(element);
+                        result.Add(id, value);
                     }
                 }
             }
-            _customSettingsState = result;
+
+            _custom_settings_state = result;
             // Update tree with loaded state (in case the tree is already populated)
-            updateNodeCheckedState(_customSettingsState);
+            UpdateNodeCheckedState(_custom_settings_state);
         }
 
-        public void SetGameVersion(string version)
+        private void InitBasicSettings(ASLSettings settings)
         {
-            labelGameVersion.Text = version != null ? "Game Version: " + version : "";
-        }
-
-        /// <summary>
-        /// Populates the component with the settings defined in the ASL script.
-        /// </summary>
-        /// 
-        public void SetASLSettings(ASL.ASLSettings settings)
-        {
-            treeCustomSettings.BeginUpdate();
-            treeCustomSettings.Nodes.Clear();
-
-            Dictionary<string, bool> values = new Dictionary<string, bool>();
-
-            // Store temporary for easier lookup of parent nodes
-            Dictionary<string, TreeNode> flat = new Dictionary<string, TreeNode>();
-
-            foreach (var setting in settings.OrderedSettings)
-            {
-                TreeNode node = new TreeNode(setting.Label);
-                node.Tag = setting;
-                node.Checked = setting.Value;
-                if (setting.Parent == null)
-                {
-                    treeCustomSettings.Nodes.Add(node);
-                }
-                else if (flat.ContainsKey(setting.Parent))
-                {
-                    flat[setting.Parent].Nodes.Add(node);
-                    flat[setting.Parent].ContextMenuStrip = treeContextMenu;
-                } 
-                flat.Add(setting.Id, node);
-                values.Add(setting.Id, setting.Value);
-            }
-            _defaultValues = values;
-
-            // Update from saved state (from XML or stored between script reloads)
-            updateNodeCheckedState(_customSettingsState);
-
-            treeCustomSettings.ExpandAll();
-            treeCustomSettings.EndUpdate();
-
-            updateCustomSettingsVisibility();
-            initBasicSettings(settings);
-        }
-
-        private void initBasicSettings(ASL.ASLSettings settings)
-        {
-            foreach (var item in _basicSettings)
+            foreach (var item in _basic_settings)
             {
                 string name = item.Key.ToLower();
                 CheckBox checkbox = item.Value;
+
                 if (settings.IsBasicSettingPresent(name))
                 {
-                    ASL.ASLSetting setting = settings.BasicSettings[name];
+                    ASLSetting setting = settings.BasicSettings[name];
                     checkbox.Enabled = true;
                     checkbox.Tag = setting;
-                    bool value = true;
-                    if (_basicSettingsState.ContainsKey(name))
-                    {
-                        value = _basicSettingsState[name];
-                    }
+                    var value = true;
+
+                    if (_basic_settings_state.ContainsKey(name))
+                        value = _basic_settings_state[name];
+
                     checkbox.Checked = value;
                     setting.Value = value;
                 }
@@ -224,14 +241,14 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        private void updateCustomSettingsVisibility()
+        private void UpdateCustomSettingsVisibility()
         {
-            bool show = treeCustomSettings.GetNodeCount(false) > 0;
-            treeCustomSettings.Visible = show;
-            btnResetToDefault.Visible = show;
-            btnCheckAll.Visible = show;
-            btnUncheckAll.Visible = show;
-            labelCustomSettings.Visible = show;
+            bool show = this.treeCustomSettings.GetNodeCount(false) > 0;
+            this.treeCustomSettings.Visible = show;
+            this.btnResetToDefault.Visible = show;
+            this.btnCheckAll.Visible = show;
+            this.btnUncheckAll.Visible = show;
+            this.labelCustomSettings.Visible = show;
         }
 
         /// <summary>
@@ -239,19 +256,17 @@ namespace LiveSplit.UI.Components
         /// based on a dictionary of setting values.
         /// </summary>
         /// 
-        private void updateNodeCheckedState(Dictionary<string, bool> settingValues,
-            TreeNodeCollection nodes = null)
+        private void UpdateNodeCheckedState(Dictionary<string, bool> setting_values, TreeNodeCollection nodes = null)
         {
-            if (settingValues == null)
-            {
+            if (setting_values == null)
                 return;
-            }
-            updateNodeCheckedState(setting => {
+
+            UpdateNodeCheckedState(setting => {
                 string id = setting.Id;
-                if (settingValues.ContainsKey(id))
-                {
-                    return settingValues[id];
-                }
+
+                if (setting_values.ContainsKey(id))
+                    return setting_values[id];
+
                 return setting.Value;
             }, nodes);
         }
@@ -261,15 +276,13 @@ namespace LiveSplit.UI.Components
         /// nodes where the Func returns false.
         /// </summary>
         /// 
-        private void updateNodesInTree(Func<TreeNode, bool> func, TreeNodeCollection nodes)
+        private void UpdateNodesInTree(Func<TreeNode, bool> func, TreeNodeCollection nodes)
         {
             foreach (TreeNode node in nodes)
             {
-                bool includeChildNodes = func(node);
-                if (includeChildNodes)
-                {
-                    updateNodesInTree(func, node.Nodes);
-                }
+                bool include_child_nodes = func(node);
+                if (include_child_nodes)
+                    UpdateNodesInTree(func, node.Nodes);
             }
         }
 
@@ -279,20 +292,18 @@ namespace LiveSplit.UI.Components
         /// </summary>
         /// <param name="nodes">If nodes is null, all nodes of the custom settings tree are affected.</param>
         /// 
-        private void updateNodeCheckedState(Func<ASL.ASLSetting, bool> func, TreeNodeCollection nodes = null)
+        private void UpdateNodeCheckedState(Func<ASLSetting, bool> func, TreeNodeCollection nodes = null)
         {
             if (nodes == null)
-            {
-                nodes = treeCustomSettings.Nodes;
-            }
-            updateNodesInTree(node =>
-            {
-                ASL.ASLSetting setting = (ASL.ASLSetting)node.Tag;
+                nodes = this.treeCustomSettings.Nodes;
+
+            UpdateNodesInTree(node => {
+                var setting = (ASLSetting)node.Tag;
                 bool check = func(setting);
+
                 if (node.Checked != check)
-                {
                     node.Checked = check;
-                }
+
                 return true;
             }, nodes);
         }
@@ -302,25 +313,25 @@ namespace LiveSplit.UI.Components
 
         private void btnSelectFile_Click(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog()
-            {
+            var dialog = new OpenFileDialog() {
                 FileName = ScriptPath,
                 Filter = "Auto Split Script (*.asl)|*.asl|All Files (*.*)|*.*"
             };
-            var result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-                ScriptPath = txtScriptPath.Text = dialog.FileName;
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+                ScriptPath = this.txtScriptPath.Text = dialog.FileName;
         }
 
         // Basic Setting checked/unchecked
         private void methodCheckbox_CheckedChanged(object sender, EventArgs e)
         {
-            CheckBox checkbox = (CheckBox)sender;
-            ASL.ASLSetting setting = (ASL.ASLSetting)checkbox.Tag;
+            var checkbox = (CheckBox)sender;
+            var setting = (ASLSetting)checkbox.Tag;
+
             if (setting != null)
             {
                 setting.Value = checkbox.Checked;
-                _basicSettingsState[setting.Id] = setting.Value;
+                _basic_settings_state[setting.Id] = setting.Value;
             }
         }
 
@@ -328,18 +339,17 @@ namespace LiveSplit.UI.Components
         private void settingsTree_AfterCheck(object sender, TreeViewEventArgs e)
         {
             // Update value in the ASLSetting object, which also changes it in the ASL script
-            ASL.ASLSetting setting = (ASL.ASLSetting)e.Node.Tag;
+            ASLSetting setting = (ASLSetting)e.Node.Tag;
             setting.Value = e.Node.Checked;
-            _customSettingsState[setting.Id] = setting.Value;
+            _custom_settings_state[setting.Id] = setting.Value;
 
             // Only change color of childnodes if this node isn't already grayed out
             if (e.Node.ForeColor != SystemColors.GrayText) 
             {
-                updateNodesInTree(node => {
+                UpdateNodesInTree(node => {
                     node.ForeColor = e.Node.Checked ? SystemColors.WindowText : SystemColors.GrayText;
                     return node.Checked;
-                },
-                e.Node.Nodes);
+                }, e.Node.Nodes);
             }
         }
 
@@ -348,17 +358,17 @@ namespace LiveSplit.UI.Components
 
         private void btnCheckAll_Click(object sender, EventArgs e)
         {
-            updateNodeCheckedState(id => true);
+            UpdateNodeCheckedState(id => true);
         }
 
         private void btnUncheckAll_Click(object sender, EventArgs e)
         {
-            updateNodeCheckedState(id => false);
+            UpdateNodeCheckedState(id => false);
         }
 
         private void btnResetToDefault_Click(object sender, EventArgs e)
         {
-            updateNodeCheckedState(_defaultValues);
+            UpdateNodeCheckedState(_default_values);
         }
 
 
@@ -367,22 +377,22 @@ namespace LiveSplit.UI.Components
         private void settingsTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             // Select clicked node (not only with left-click) for use with context menu
-            treeCustomSettings.SelectedNode = e.Node;
+            this.treeCustomSettings.SelectedNode = e.Node;
         }
 
         private void cmiCheckBranch_Click(object sender, EventArgs e)
         {
-            updateNodeCheckedState(i => true, treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeCheckedState(i => true, this.treeCustomSettings.SelectedNode.Nodes);
         }
 
         private void cmiUncheckBranch_Click(object sender, EventArgs e)
         {
-            updateNodeCheckedState(i => false, treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeCheckedState(i => false, this.treeCustomSettings.SelectedNode.Nodes);
         }
 
         private void cmiResetBranchToDefault_Click(object sender, EventArgs e)
         {
-            updateNodeCheckedState(_defaultValues, treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeCheckedState(_default_values, this.treeCustomSettings.SelectedNode.Nodes);
         }
     }
 
@@ -399,12 +409,14 @@ namespace LiveSplit.UI.Components
         {
             if (m.Msg == 0x203) // identified double click
             {
-                var localPos = PointToClient(Cursor.Position);
-                var hitTestInfo = HitTest(localPos);
-                if (hitTestInfo.Location == TreeViewHitTestLocations.StateImage)
+                var local_pos = PointToClient(Cursor.Position);
+                var hit_test_info = HitTest(local_pos);
+
+                if (hit_test_info.Location == TreeViewHitTestLocations.StateImage)
                 {
                     m.Msg = 0x201; // if checkbox was clicked, turn into single click
                 }
+
                 base.WndProc(ref m);
             }
             else
@@ -412,7 +424,5 @@ namespace LiveSplit.UI.Components
                 base.WndProc(ref m);
             }
         }
-
     }
-
 }

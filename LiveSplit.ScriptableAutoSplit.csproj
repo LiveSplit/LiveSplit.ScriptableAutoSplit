@@ -60,8 +60,6 @@
     <Compile Include="ASL\ASLScript.cs" />
     <Compile Include="ASL\ASLSettings.cs" />
     <Compile Include="ASL\ASLState.cs" />
-    <Compile Include="ASL\ASLValueDefinition.cs" />
-    <Compile Include="ASL\ASLSetting.cs" />
     <Compile Include="Component.cs" />
     <Compile Include="ComponentSettings.cs">
       <SubType>UserControl</SubType>

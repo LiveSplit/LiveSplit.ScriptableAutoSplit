@@ -41,7 +41,7 @@
             this.checkboxStart = new System.Windows.Forms.CheckBox();
             this.checkboxSplit = new System.Windows.Forms.CheckBox();
             this.checkboxReset = new System.Windows.Forms.CheckBox();
-            this.labelGameVersion = new System.Windows.Forms.Label();
+            this.lblGameVersion = new System.Windows.Forms.Label();
             this.labelOptions = new System.Windows.Forms.Label();
             this.labelCustomSettings = new System.Windows.Forms.Label();
             this.treeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -165,7 +165,7 @@
             this.flowLayoutPanel2.Controls.Add(this.checkboxStart);
             this.flowLayoutPanel2.Controls.Add(this.checkboxSplit);
             this.flowLayoutPanel2.Controls.Add(this.checkboxReset);
-            this.flowLayoutPanel2.Controls.Add(this.labelGameVersion);
+            this.flowLayoutPanel2.Controls.Add(this.lblGameVersion);
             this.flowLayoutPanel2.Location = new System.Drawing.Point(79, 32);
             this.flowLayoutPanel2.Name = "flowLayoutPanel2";
             this.flowLayoutPanel2.Size = new System.Drawing.Size(380, 23);
@@ -206,14 +206,14 @@
             // 
             // labelGameVersion
             // 
-            this.labelGameVersion.Anchor = System.Windows.Forms.AnchorStyles.Right;
-            this.labelGameVersion.AutoEllipsis = true;
-            this.labelGameVersion.Location = new System.Drawing.Point(169, 5);
-            this.labelGameVersion.Name = "labelGameVersion";
-            this.labelGameVersion.Size = new System.Drawing.Size(208, 13);
-            this.labelGameVersion.TabIndex = 10;
-            this.labelGameVersion.Text = "Game Version: 1.0";
-            this.labelGameVersion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.lblGameVersion.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.lblGameVersion.AutoEllipsis = true;
+            this.lblGameVersion.Location = new System.Drawing.Point(169, 5);
+            this.lblGameVersion.Name = "lblGameVersion";
+            this.lblGameVersion.Size = new System.Drawing.Size(208, 13);
+            this.lblGameVersion.TabIndex = 10;
+            this.lblGameVersion.Text = "Game Version: 1.0";
+            this.lblGameVersion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // labelOptions
             // 
@@ -309,7 +309,7 @@
         private System.Windows.Forms.Button btnUncheckAll;
         private System.Windows.Forms.Button btnResetToDefault;
         private System.Windows.Forms.Label labelOptions;
-        private System.Windows.Forms.Label labelGameVersion;
+        private System.Windows.Forms.Label lblGameVersion;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.CheckBox checkboxStart;
         private System.Windows.Forms.CheckBox checkboxReset;

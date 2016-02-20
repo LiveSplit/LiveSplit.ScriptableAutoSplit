@@ -1,107 +1,105 @@
-﻿#define GAME_TIME
-
-using LiveSplit.ASL;
-using LiveSplit.Model;
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using System.Xml;
+using LiveSplit.ASL;
+using LiveSplit.Model;
 using LiveSplit.Options;
-using System.Diagnostics;
 
 namespace LiveSplit.UI.Components
 {
     class Component : LogicComponent
     {
-        public ComponentSettings Settings { get; set; }
-
         public override string ComponentName => "Scriptable Auto Splitter";
 
-        protected LiveSplitState State { get; }
-        protected string OldScriptPath { get; set; }
-        protected FileSystemWatcher FSWatcher { get; set; }
-        protected bool DoReload { get; set; }
-        protected Timer UpdateTimer { get; set; }
+        private bool _do_reload;
+        private string _old_script_path;
 
-        public bool Refresh { get; set; }
+        private Timer _update_timer;
+        private FileSystemWatcher _fs_watcher;
 
-        public ASLScript Script { get; set; }
+        private ASLScript _script;
+        private ComponentSettings _settings;
 
-        public Component(LiveSplitState state, string scriptPath)
-            : this(state)
-        {
-            Settings = new ComponentSettings()
-            {
-                ScriptPath = scriptPath
-            };
-        }
+        private LiveSplitState _state;
 
         public Component(LiveSplitState state)
         {
-            State = state;
-            Settings = new ComponentSettings();
-            FSWatcher = new FileSystemWatcher();
-            FSWatcher.Changed += (sender, args) => DoReload = true;
-            UpdateTimer = new Timer() { Interval = 15 }; // run a little faster than 60hz
-            UpdateTimer.Tick += (sender, args) => UpdateScript();
-            UpdateTimer.Enabled = true;
+            _state = state;
+
+            _settings = new ComponentSettings();
+
+            _fs_watcher = new FileSystemWatcher();
+            _fs_watcher.Changed += (sender, args) => _do_reload = true;
+
+            // -try- to run a little faster than 60hz
+            // note: Timer isn't very reliable and quite often takes ~30ms
+            // we need to switch to threading
+            _update_timer = new Timer() { Interval = 15 };
+            _update_timer.Tick += (sender, args) => UpdateScript();
+            _update_timer.Enabled = true;
         }
 
-        public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
+        public Component(LiveSplitState state, string script_path)
+            : this(state)
         {
-
-        }
-
-        public override XmlNode GetSettings(XmlDocument document)
-        {
-            return Settings.GetSettings(document);
-        }
-
-        public override Control GetSettingsControl(LayoutMode mode)
-        {
-            return Settings;
-        }
-
-        public override void SetSettings(XmlNode settings)
-        {
-            Settings.SetSettings(settings);
+            _settings = new ComponentSettings() { ScriptPath = script_path };
         }
 
         public override void Dispose()
         {
-            scriptCleanup();
+            ScriptCleanup();
 
-            if (FSWatcher != null)
-                FSWatcher.Dispose();
-            if (UpdateTimer != null)
-                UpdateTimer.Dispose();
+            _fs_watcher?.Dispose();
+            _update_timer?.Dispose();
         }
 
-        protected void UpdateScript()
+        public override Control GetSettingsControl(LayoutMode mode)
+        {
+            return _settings;
+        }
+
+        public override XmlNode GetSettings(XmlDocument document)
+        {
+            return _settings.GetSettings(document);
+        }
+
+        public override void SetSettings(XmlNode settings)
+        {
+            _settings.SetSettings(settings);
+        }
+
+        public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height,
+            LayoutMode mode) { }
+
+
+        private void UpdateScript()
         {
             // Disable timer, to wait for execution of this iteration to
             // finish. This can be useful if blocking operations like
             // showing a message window are used.
-            UpdateTimer.Enabled = false;
+            _update_timer.Enabled = false;
 
             // this is ugly, fix eventually!
-            if (Settings.ScriptPath != OldScriptPath || DoReload)
+            if (_settings.ScriptPath != _old_script_path || _do_reload)
             {
                 try
                 {
-                    DoReload = false;
-                    OldScriptPath = Settings.ScriptPath;
+                    _do_reload = false;
+                    _old_script_path = _settings.ScriptPath;
 
-                    scriptCleanup();
-                    if (string.IsNullOrEmpty(Settings.ScriptPath))
+                    ScriptCleanup();
+
+                    if (string.IsNullOrEmpty(_settings.ScriptPath))
                     {
                         // Only disable file watcher if script path changed to empty
                         // (otherwise detecting file changes may still be wanted)
-                        FSWatcher.EnableRaisingEvents = false;
+                        _fs_watcher.EnableRaisingEvents = false;
                     }
                     else
                     {
-                        loadScript();
+                        LoadScript();
                     }
                 }
                 catch (Exception ex)
@@ -110,86 +108,77 @@ namespace LiveSplit.UI.Components
                 }
             }
 
-            if (Script != null)
+            if (_script != null)
             {
                 try
                 {
-                    Script.RunUpdate(State);
+                    _script.Update(_state);
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex);
                 }
             }
-            UpdateTimer.Enabled = true;
+
+            _update_timer.Enabled = true;
         }
 
-        private void loadScript()
+        private void LoadScript()
         {
-            Trace.WriteLine("[ASL] Loading new script: "+Settings.ScriptPath);
+            Trace.WriteLine("[ASL] Loading new script: " + _settings.ScriptPath);
 
-            FSWatcher.Path = Path.GetDirectoryName(Settings.ScriptPath);
-            FSWatcher.Filter = Path.GetFileName(Settings.ScriptPath);
-            FSWatcher.EnableRaisingEvents = true;
+            _fs_watcher.Path = Path.GetDirectoryName(_settings.ScriptPath);
+            _fs_watcher.Filter = Path.GetFileName(_settings.ScriptPath);
+            _fs_watcher.EnableRaisingEvents = true;
 
             // New script
-            Script = ASLParser.Parse(File.ReadAllText(Settings.ScriptPath));
+            _script = ASLParser.Parse(File.ReadAllText(_settings.ScriptPath));
 
-            Script.RefreshRateChanged += Script_RefreshRateChanged;
-            Script_RefreshRateChanged(this, Script.RefreshRate);
+            _script.RefreshRateChanged += (sender, rate) => _update_timer.Interval = (int)Math.Round(1000 / rate);
+            _update_timer.Interval = (int)Math.Round(1000 / _script.RefreshRate);
 
-            Script.GameVersionChanged += Script_GameVersionChanged;
-            Settings.SetGameVersion(null);
+            _script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
+            _settings.SetGameVersion(null);
 
             // Give custom ASL settings to GUI, which populates the list and
             // stores the ASLSetting objects which are shared between the GUI
             // and ASLScript
             try
             {
-                ASL.ASLSettings settingsFromASL = Script.RunStartup(State);
-                Settings.SetASLSettings(settingsFromASL);
+                ASLSettings settings = _script.RunStartup(_state);
+                _settings.SetASLSettings(settings);
             }
             catch (Exception ex)
             {
                 // Script already created, but startup failed, so clean up again
                 Log.Error(ex);
-                scriptCleanup();
+                ScriptCleanup();
             }
         }
 
-        private void scriptCleanup()
+        private void ScriptCleanup()
         {
-            if (Script != null)
+            if (_script == null)
+                return;
+
+            try
             {
-                try
-                {
-                    Script.RefreshRateChanged -= Script_RefreshRateChanged;
-                    Script.GameVersionChanged -= Script_GameVersionChanged;
-                    Settings.SetGameVersion(null);
-                    Settings.SetASLSettings(new ASLSettings());
-                    Script.RunShutdown(State);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex);
-                }
-                finally
-                {
-                    // Script should no longer be used, even in case of error
-                    // (which the ASL shutdown method may contain)
-                    Script = null;
-                }
+                _script.RunShutdown(_state);
             }
-        }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
+            finally
+            {
+                _script.Dispose();
+                _settings.SetGameVersion(null);
+                _settings.SetASLSettings(new ASLSettings());
 
-        private void Script_RefreshRateChanged(object sender, double e)
-        {
-            UpdateTimer.Interval = (int)Math.Round(1000 / e);
-        }
-
-        private void Script_GameVersionChanged(object sender, string version)
-        {
-            Settings.SetGameVersion(version);
+                // Script should no longer be used, even in case of error
+                // (which the ASL shutdown method may contain)
+                _script = null;
+            }
         }
     }
 }
