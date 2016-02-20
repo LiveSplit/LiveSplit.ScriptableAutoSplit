@@ -114,6 +114,14 @@ namespace LiveSplit.UI.Components
                 values.Add(setting.Id, setting.Value);
             }
 
+            // Gray out deactivated nodes after all have been added
+            foreach (var item in flat) {
+                if (!item.Value.Checked)
+                {
+                    UpdateGrayedOut(item.Value);
+                }
+            }
+
             _default_values = values;
 
             // Update from saved state (from XML or stored between script reloads)
@@ -308,6 +316,21 @@ namespace LiveSplit.UI.Components
             }, nodes);
         }
 
+        /// <summary>
+        /// If the given node is unchecked, grays out all childnodes.
+        /// </summary>
+        private void UpdateGrayedOut(TreeNode node)
+        {
+            // Only change color of childnodes if this node isn't already grayed out
+            if (node.ForeColor != SystemColors.GrayText)
+            {
+                UpdateNodesInTree(n => {
+                    n.ForeColor = node.Checked ? SystemColors.WindowText : SystemColors.GrayText;
+                    return n.Checked;
+                }, node.Nodes);
+            }
+        }
+
 
         // Events
 
@@ -343,14 +366,7 @@ namespace LiveSplit.UI.Components
             setting.Value = e.Node.Checked;
             _custom_settings_state[setting.Id] = setting.Value;
 
-            // Only change color of childnodes if this node isn't already grayed out
-            if (e.Node.ForeColor != SystemColors.GrayText) 
-            {
-                UpdateNodesInTree(node => {
-                    node.ForeColor = e.Node.Checked ? SystemColors.WindowText : SystemColors.GrayText;
-                    return node.Checked;
-                }, e.Node.Nodes);
-            }
+            UpdateGrayedOut(e.Node);
         }
 
 
