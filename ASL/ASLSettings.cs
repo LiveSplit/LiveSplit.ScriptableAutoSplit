@@ -53,6 +53,8 @@ namespace LiveSplit.ASL
                 description = name;
             if (parent != null && !Settings.ContainsKey(parent))
                 throw new ArgumentException($"Parent for setting '{name}' is not a setting: {parent}");
+            if (Settings.ContainsKey(name))
+                throw new ArgumentException($"Setting '{name}' was already added");
 
             var setting = new ASLSetting(name, default_value, description, parent);
             Settings.Add(name, setting);
