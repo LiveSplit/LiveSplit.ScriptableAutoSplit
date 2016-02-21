@@ -124,7 +124,7 @@ namespace LiveSplit.ASL
         public void RunShutdown(LiveSplitState state)
         {
             Debug("Running shutdown");
-            RunNoProcessMethod(_methods.shutdown, state);
+            RunMethod(_methods.shutdown, state);
         }
 
 

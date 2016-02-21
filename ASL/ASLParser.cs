@@ -27,7 +27,7 @@ namespace LiveSplit.ASL
             {
                 var process_name = (string)state_node.ChildNodes[2].Token.Value;
                 var version =
-                    state_node.ChildNodes[3].ChildNodes.Skip(1).Select(x => (string) x.Token.Value).FirstOrDefault() ??
+                    state_node.ChildNodes[3].ChildNodes.Skip(1).Select(x => (string)x.Token.Value).FirstOrDefault() ??
                     string.Empty;
                 var value_definition_nodes = state_node.ChildNodes[6].ChildNodes;
 
@@ -39,7 +39,7 @@ namespace LiveSplit.ASL
                     var type = (string)child_nodes[0].Token.Value;
                     var identifier = (string)child_nodes[1].Token.Value;
                     var module =
-                        child_nodes[3].ChildNodes.Take(1).Select(x => (string) x.Token.Value).FirstOrDefault() ??
+                        child_nodes[3].ChildNodes.Take(1).Select(x => (string)x.Token.Value).FirstOrDefault() ??
                         string.Empty;
                     var module_base = child_nodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
                     var offsets = child_nodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
