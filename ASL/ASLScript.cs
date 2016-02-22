@@ -263,7 +263,7 @@ namespace LiveSplit.ASL
         {
             var refresh_rate = RefreshRate;
             var result = method.Call(state, Vars, ref version, ref refresh_rate, _settings.Reader,
-                OldState.Data, State.Data, _game);
+                OldState?.Data, State?.Data, _game);
             RefreshRate = refresh_rate;
             return result;
         }
