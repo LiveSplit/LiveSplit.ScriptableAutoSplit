@@ -9,9 +9,12 @@ using LiveSplit.Options;
 
 namespace LiveSplit.UI.Components
 {
-    class Component : LogicComponent
+    public class ASLComponent : LogicComponent
     {
         public override string ComponentName => "Scriptable Auto Splitter";
+
+        // public so other components (ASLVarViewer) can access
+        public ASLScript Script { get; private set; }
 
         private bool _do_reload;
         private string _old_script_path;
@@ -19,12 +22,11 @@ namespace LiveSplit.UI.Components
         private Timer _update_timer;
         private FileSystemWatcher _fs_watcher;
 
-        private ASLScript _script;
         private ComponentSettings _settings;
 
         private LiveSplitState _state;
 
-        public Component(LiveSplitState state)
+        public ASLComponent(LiveSplitState state)
         {
             _state = state;
 
@@ -41,7 +43,7 @@ namespace LiveSplit.UI.Components
             _update_timer.Enabled = true;
         }
 
-        public Component(LiveSplitState state, string script_path)
+        public ASLComponent(LiveSplitState state, string script_path)
             : this(state)
         {
             _settings = new ComponentSettings() { ScriptPath = script_path };
@@ -108,11 +110,11 @@ namespace LiveSplit.UI.Components
                 }
             }
 
-            if (_script != null)
+            if (Script != null)
             {
                 try
                 {
-                    _script.Update(_state);
+                    Script.Update(_state);
                 }
                 catch (Exception ex)
                 {
@@ -132,12 +134,12 @@ namespace LiveSplit.UI.Components
             _fs_watcher.EnableRaisingEvents = true;
 
             // New script
-            _script = ASLParser.Parse(File.ReadAllText(_settings.ScriptPath));
+            Script = ASLParser.Parse(File.ReadAllText(_settings.ScriptPath));
 
-            _script.RefreshRateChanged += (sender, rate) => _update_timer.Interval = (int)Math.Round(1000 / rate);
-            _update_timer.Interval = (int)Math.Round(1000 / _script.RefreshRate);
+            Script.RefreshRateChanged += (sender, rate) => _update_timer.Interval = (int)Math.Round(1000 / rate);
+            _update_timer.Interval = (int)Math.Round(1000 / Script.RefreshRate);
 
-            _script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
+            Script.GameVersionChanged += (sender, version) => _settings.SetGameVersion(version);
             _settings.SetGameVersion(null);
 
             // Give custom ASL settings to GUI, which populates the list and
@@ -145,7 +147,7 @@ namespace LiveSplit.UI.Components
             // and ASLScript
             try
             {
-                ASLSettings settings = _script.RunStartup(_state);
+                ASLSettings settings = Script.RunStartup(_state);
                 _settings.SetASLSettings(settings);
             }
             catch (Exception ex)
@@ -158,12 +160,12 @@ namespace LiveSplit.UI.Components
 
         private void ScriptCleanup()
         {
-            if (_script == null)
+            if (Script == null)
                 return;
 
             try
             {
-                _script.RunShutdown(_state);
+                Script.RunShutdown(_state);
             }
             catch (Exception ex)
             {
@@ -171,13 +173,13 @@ namespace LiveSplit.UI.Components
             }
             finally
             {
-                _script.Dispose();
+                Script.Dispose();
                 _settings.SetGameVersion(null);
                 _settings.SetASLSettings(new ASLSettings());
 
                 // Script should no longer be used, even in case of error
                 // (which the ASL shutdown method may contain)
-                _script = null;
+                Script = null;
             }
         }
     }

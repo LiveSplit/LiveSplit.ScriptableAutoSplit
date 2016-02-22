@@ -52,18 +52,20 @@ namespace LiveSplit.ASL
             }
         }
 
+        // public so other components (ASLVarViewer) can access
+        public ASLState State { get; private set; }
+        public ASLState OldState { get; private set; }
+        public ExpandoObject Vars { get; }
+
         private bool _uses_game_time;
         private bool _init_completed;
 
         private ASLSettings _settings;
 
-        private ExpandoObject _vars;
         private Process _game;
         private TimerModel _timer;
 
         private Dictionary<string, List<ASLState>> _states;
-        private ASLState _state;
-        private ASLState _old_state;
 
         private Methods _methods;
 
@@ -73,7 +75,7 @@ namespace LiveSplit.ASL
             _states = states;
 
             _settings = new ASLSettings();
-            _vars = new ExpandoObject();
+            Vars = new ExpandoObject();
 
             if (!_methods.start.IsEmpty)
                 _settings.AddBasicSetting("start");
@@ -144,9 +146,9 @@ namespace LiveSplit.ASL
 
             _init_completed = false;
             _game = state_process.Process;
-            _state = state_process.State;
+            State = state_process.State;
 
-            if (_state.GameVersion == "")
+            if (State.GameVersion == "")
             {
                 Debug("Connected to game: {0} (using default state descriptor)", _game.ProcessName);
             }
@@ -154,7 +156,7 @@ namespace LiveSplit.ASL
             {
                 Debug("Connected to game: {0} (state descriptor for version '{1}' chosen as default)",
                     _game.ProcessName,
-                    _state.GameVersion);
+                    State.GameVersion);
             }
 
             DoInit(state);
@@ -166,8 +168,8 @@ namespace LiveSplit.ASL
         {
             Debug("Initializing");
 
-            _state.RefreshValues(_game);
-            _old_state = _state;
+            State.RefreshValues(_game);
+            OldState = State;
             GameVersion = string.Empty;
 
             // Fetch version from init-method
@@ -186,11 +188,11 @@ namespace LiveSplit.ASL
                 if (version_state != null)
                 {
                     // This state descriptor may already be selected
-                    if (version_state != _state)
+                    if (version_state != State)
                     {
-                        _state = version_state;
-                        _state.RefreshValues(_game);
-                        _old_state = _state;
+                        State = version_state;
+                        State.RefreshValues(_game);
+                        OldState = State;
                         Debug($"Switched to state descriptor for version '{GameVersion}'");
                     }
                 }
@@ -214,7 +216,7 @@ namespace LiveSplit.ASL
         // This is executed repeatedly as long as the game is connected and initialized.
         private void DoUpdate(LiveSplitState state)
         {
-            _old_state = _state.RefreshValues(_game);
+            OldState = State.RefreshValues(_game);
 
             if (!(RunMethod(_methods.update, state) ?? true))
             {
@@ -260,8 +262,8 @@ namespace LiveSplit.ASL
         private dynamic RunMethod(ASLMethod method, LiveSplitState state, ref string version)
         {
             var refresh_rate = RefreshRate;
-            var result = method.Call(state, _vars, ref version, ref refresh_rate, _settings.Reader,
-                _old_state.Data, _state.Data, _game);
+            var result = method.Call(state, Vars, ref version, ref refresh_rate, _settings.Reader,
+                OldState.Data, State.Data, _game);
             RefreshRate = refresh_rate;
             return result;
         }
@@ -277,7 +279,7 @@ namespace LiveSplit.ASL
         {
             var refresh_rate = RefreshRate;
             var version = GameVersion;
-            method.Call(state, _vars, ref version, ref refresh_rate,
+            method.Call(state, Vars, ref version, ref refresh_rate,
                 is_startup ? _settings.Builder : (object)_settings.Reader);
             RefreshRate = refresh_rate;
         }
