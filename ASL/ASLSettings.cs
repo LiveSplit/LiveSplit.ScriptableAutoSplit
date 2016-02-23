@@ -11,6 +11,7 @@ namespace LiveSplit.ASL
         public string Label { get; }
         public bool Value { get; set; }
         public string Parent { get; }
+        public string ToolTip { get; set; }
 
         public ASLSetting(string id, bool default_value, string label, string parent)
         {
@@ -126,6 +127,14 @@ namespace LiveSplit.ASL
                 parent = CurrentDefaultParent;
 
             _s.AddSetting(id, default_value, description, parent);
+        }
+
+        public void SetToolTip(string id, string text)
+        {
+            if (!_s.Settings.ContainsKey(id))
+                throw new ArgumentException($"Can't set tooltip, '{id}' is not a setting");
+
+            _s.Settings[id].ToolTip = text;
         }
     }
 

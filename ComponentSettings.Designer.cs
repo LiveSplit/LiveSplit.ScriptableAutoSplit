@@ -45,14 +45,30 @@
             this.labelOptions = new System.Windows.Forms.Label();
             this.labelCustomSettings = new System.Windows.Forms.Label();
             this.treeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.cmiExpandTree = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmiCollapseTree = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmiCollapseTreeToSelection = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.cmiExpandBranch = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmiCollapseBranch = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.cmiCheckBranch = new System.Windows.Forms.ToolStripMenuItem();
             this.cmiUncheckBranch = new System.Windows.Forms.ToolStripMenuItem();
             this.cmiResetBranchToDefault = new System.Windows.Forms.ToolStripMenuItem();
+            this.treeContextMenu2 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.cmiExpandTree2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmiCollapseTree2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmiCollapseTreeToSelection2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmiResetSettingToDefault = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.resetSettingToDefaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.treeCustomSettings = new LiveSplit.UI.Components.NewTreeView();
             this.tableLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
             this.treeContextMenu.SuspendLayout();
+            this.treeContextMenu2.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -153,7 +169,7 @@
             this.btnResetToDefault.Name = "btnResetToDefault";
             this.btnResetToDefault.Size = new System.Drawing.Size(99, 23);
             this.btnResetToDefault.TabIndex = 7;
-            this.btnResetToDefault.Text = "Reset to default";
+            this.btnResetToDefault.Text = "Reset to Default";
             this.btnResetToDefault.UseVisualStyleBackColor = true;
             this.btnResetToDefault.Click += new System.EventHandler(this.btnResetToDefault_Click);
             // 
@@ -204,7 +220,7 @@
             this.checkboxReset.UseVisualStyleBackColor = true;
             this.checkboxReset.CheckedChanged += new System.EventHandler(this.methodCheckbox_CheckedChanged);
             // 
-            // labelGameVersion
+            // lblGameVersion
             // 
             this.lblGameVersion.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblGameVersion.AutoEllipsis = true;
@@ -238,32 +254,142 @@
             // treeContextMenu
             // 
             this.treeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cmiExpandTree,
+            this.cmiCollapseTree,
+            this.cmiCollapseTreeToSelection,
+            this.toolStripSeparator1,
+            this.cmiExpandBranch,
+            this.cmiCollapseBranch,
+            this.toolStripSeparator2,
             this.cmiCheckBranch,
             this.cmiUncheckBranch,
-            this.cmiResetBranchToDefault});
+            this.cmiResetBranchToDefault,
+            this.toolStripSeparator3,
+            this.cmiResetSettingToDefault});
             this.treeContextMenu.Name = "treeContextMenu";
-            this.treeContextMenu.Size = new System.Drawing.Size(189, 70);
+            this.treeContextMenu.Size = new System.Drawing.Size(199, 220);
+            // 
+            // cmiExpandTree
+            // 
+            this.cmiExpandTree.Name = "cmiExpandTree";
+            this.cmiExpandTree.Size = new System.Drawing.Size(198, 22);
+            this.cmiExpandTree.Text = "Expand Tree";
+            this.cmiExpandTree.Click += new System.EventHandler(this.cmiExpandTree_Click);
+            // 
+            // cmiCollapseTree
+            // 
+            this.cmiCollapseTree.Name = "cmiCollapseTree";
+            this.cmiCollapseTree.Size = new System.Drawing.Size(198, 22);
+            this.cmiCollapseTree.Text = "Collapse Tree";
+            this.cmiCollapseTree.Click += new System.EventHandler(this.cmiCollapseTree_Click);
+            // 
+            // cmiCollapseTreeToSelection
+            // 
+            this.cmiCollapseTreeToSelection.Name = "cmiCollapseTreeToSelection";
+            this.cmiCollapseTreeToSelection.Size = new System.Drawing.Size(198, 22);
+            this.cmiCollapseTreeToSelection.Text = "Collapse Tree to Selection";
+            this.cmiCollapseTreeToSelection.Click += new System.EventHandler(this.cmiCollapseTreeToSelection_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(195, 6);
+            // 
+            // cmiExpandBranch
+            // 
+            this.cmiExpandBranch.Name = "cmiExpandBranch";
+            this.cmiExpandBranch.Size = new System.Drawing.Size(198, 22);
+            this.cmiExpandBranch.Text = "Expand Branch";
+            this.cmiExpandBranch.Click += new System.EventHandler(this.cmiExpandBranch_Click);
+            // 
+            // cmiCollapseBranch
+            // 
+            this.cmiCollapseBranch.Name = "cmiCollapseBranch";
+            this.cmiCollapseBranch.Size = new System.Drawing.Size(198, 22);
+            this.cmiCollapseBranch.Text = "Collapse Branch";
+            this.cmiCollapseBranch.Click += new System.EventHandler(this.cmiCollapseBranch_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(195, 6);
             // 
             // cmiCheckBranch
             // 
             this.cmiCheckBranch.Name = "cmiCheckBranch";
-            this.cmiCheckBranch.Size = new System.Drawing.Size(188, 22);
+            this.cmiCheckBranch.Size = new System.Drawing.Size(198, 22);
             this.cmiCheckBranch.Text = "Check Branch";
             this.cmiCheckBranch.Click += new System.EventHandler(this.cmiCheckBranch_Click);
             // 
             // cmiUncheckBranch
             // 
             this.cmiUncheckBranch.Name = "cmiUncheckBranch";
-            this.cmiUncheckBranch.Size = new System.Drawing.Size(188, 22);
+            this.cmiUncheckBranch.Size = new System.Drawing.Size(198, 22);
             this.cmiUncheckBranch.Text = "Uncheck Branch";
             this.cmiUncheckBranch.Click += new System.EventHandler(this.cmiUncheckBranch_Click);
             // 
             // cmiResetBranchToDefault
             // 
             this.cmiResetBranchToDefault.Name = "cmiResetBranchToDefault";
-            this.cmiResetBranchToDefault.Size = new System.Drawing.Size(188, 22);
-            this.cmiResetBranchToDefault.Text = "Reset Branch to default";
+            this.cmiResetBranchToDefault.Size = new System.Drawing.Size(198, 22);
+            this.cmiResetBranchToDefault.Text = "Reset Branch to Default";
             this.cmiResetBranchToDefault.Click += new System.EventHandler(this.cmiResetBranchToDefault_Click);
+            // 
+            // treeContextMenu2
+            // 
+            this.treeContextMenu2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cmiExpandTree2,
+            this.cmiCollapseTree2,
+            this.cmiCollapseTreeToSelection2,
+            this.toolStripSeparator4,
+            this.resetSettingToDefaultToolStripMenuItem});
+            this.treeContextMenu2.Name = "treeContextMenu";
+            this.treeContextMenu2.Size = new System.Drawing.Size(199, 98);
+            // 
+            // cmiExpandTree2
+            // 
+            this.cmiExpandTree2.Name = "cmiExpandTree2";
+            this.cmiExpandTree2.Size = new System.Drawing.Size(198, 22);
+            this.cmiExpandTree2.Text = "Expand Tree";
+            this.cmiExpandTree2.Click += new System.EventHandler(this.cmiExpandTree_Click);
+            // 
+            // cmiCollapseTree2
+            // 
+            this.cmiCollapseTree2.Name = "cmiCollapseTree2";
+            this.cmiCollapseTree2.Size = new System.Drawing.Size(198, 22);
+            this.cmiCollapseTree2.Text = "Collapse Tree";
+            this.cmiCollapseTree2.Click += new System.EventHandler(this.cmiCollapseTree_Click);
+            // 
+            // cmiCollapseTreeToSelection2
+            // 
+            this.cmiCollapseTreeToSelection2.Name = "cmiCollapseTreeToSelection2";
+            this.cmiCollapseTreeToSelection2.Size = new System.Drawing.Size(198, 22);
+            this.cmiCollapseTreeToSelection2.Text = "Collapse Tree to Selection";
+            this.cmiCollapseTreeToSelection2.Click += new System.EventHandler(this.cmiCollapseTreeToSelection_Click);
+            // 
+            // cmiResetSettingToDefault
+            // 
+            this.cmiResetSettingToDefault.Name = "cmiResetSettingToDefault";
+            this.cmiResetSettingToDefault.Size = new System.Drawing.Size(198, 22);
+            this.cmiResetSettingToDefault.Text = "Reset Setting to Default";
+            this.cmiResetSettingToDefault.Click += new System.EventHandler(this.cmiResetSettingToDefault_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(195, 6);
+            // 
+            // resetSettingToDefaultToolStripMenuItem
+            // 
+            this.resetSettingToDefaultToolStripMenuItem.Name = "resetSettingToDefaultToolStripMenuItem";
+            this.resetSettingToDefaultToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.resetSettingToDefaultToolStripMenuItem.Text = "Reset Setting to Default";
+            this.resetSettingToDefaultToolStripMenuItem.Click += new System.EventHandler(this.cmiResetSettingToDefault_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(195, 6);
             // 
             // treeCustomSettings
             // 
@@ -274,6 +400,7 @@
             this.tableLayoutPanel1.SetColumnSpan(this.treeCustomSettings, 2);
             this.treeCustomSettings.Location = new System.Drawing.Point(79, 61);
             this.treeCustomSettings.Name = "treeCustomSettings";
+            this.treeCustomSettings.ShowNodeToolTips = true;
             this.treeCustomSettings.Size = new System.Drawing.Size(380, 390);
             this.treeCustomSettings.TabIndex = 14;
             this.treeCustomSettings.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.settingsTree_AfterCheck);
@@ -293,6 +420,7 @@
             this.flowLayoutPanel1.PerformLayout();
             this.flowLayoutPanel2.ResumeLayout(false);
             this.treeContextMenu.ResumeLayout(false);
+            this.treeContextMenu2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -320,5 +448,20 @@
         private System.Windows.Forms.ToolStripMenuItem cmiCheckBranch;
         private System.Windows.Forms.ToolStripMenuItem cmiUncheckBranch;
         private System.Windows.Forms.ToolStripMenuItem cmiResetBranchToDefault;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem cmiExpandBranch;
+        private System.Windows.Forms.ToolStripMenuItem cmiCollapseBranch;
+        private System.Windows.Forms.ToolStripMenuItem cmiCollapseTreeToSelection;
+        private System.Windows.Forms.ContextMenuStrip treeContextMenu2;
+        private System.Windows.Forms.ToolStripMenuItem cmiCollapseTreeToSelection2;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem cmiExpandTree;
+        private System.Windows.Forms.ToolStripMenuItem cmiCollapseTree;
+        private System.Windows.Forms.ToolStripMenuItem cmiExpandTree2;
+        private System.Windows.Forms.ToolStripMenuItem cmiCollapseTree2;
+        private System.Windows.Forms.ToolStripMenuItem cmiResetSettingToDefault;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem resetSettingToDefaultToolStripMenuItem;
     }
 }
