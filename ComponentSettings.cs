@@ -97,7 +97,9 @@ namespace LiveSplit.UI.Components
             {
                 var node = new TreeNode(setting.Label) {
                     Tag = setting,
-                    Checked = setting.Value
+                    Checked = setting.Value,
+                    ContextMenuStrip = this.treeContextMenu2,
+                    ToolTipText = setting.ToolTip
                 };
 
                 if (setting.Parent == null)
@@ -129,6 +131,10 @@ namespace LiveSplit.UI.Components
 
             treeCustomSettings.ExpandAll();
             treeCustomSettings.EndUpdate();
+
+            // Scroll up to the top
+            if (this.treeCustomSettings.Nodes.Count > 0)
+                this.treeCustomSettings.Nodes[0].EnsureVisible();
 
             UpdateCustomSettingsVisibility();
             InitBasicSettings(settings);
@@ -409,6 +415,45 @@ namespace LiveSplit.UI.Components
         private void cmiResetBranchToDefault_Click(object sender, EventArgs e)
         {
             UpdateNodeCheckedState(_default_values, this.treeCustomSettings.SelectedNode.Nodes);
+        }
+
+        private void cmiExpandBranch_Click(object sender, EventArgs e)
+        {
+            this.treeCustomSettings.SelectedNode.ExpandAll();
+            this.treeCustomSettings.SelectedNode.EnsureVisible();
+        }
+
+        private void cmiCollapseBranch_Click(object sender, EventArgs e)
+        {
+            this.treeCustomSettings.SelectedNode.Collapse();
+            this.treeCustomSettings.SelectedNode.EnsureVisible();
+        }
+
+        private void cmiCollapseTreeToSelection_Click(object sender, EventArgs e)
+        {
+            TreeNode selected = this.treeCustomSettings.SelectedNode;
+            this.treeCustomSettings.CollapseAll();
+            this.treeCustomSettings.SelectedNode = selected;
+            selected.EnsureVisible();
+        }
+
+        private void cmiExpandTree_Click(object sender, EventArgs e)
+        {
+            this.treeCustomSettings.ExpandAll();
+            this.treeCustomSettings.SelectedNode.EnsureVisible();
+        }
+
+        private void cmiCollapseTree_Click(object sender, EventArgs e)
+        {
+            this.treeCustomSettings.CollapseAll();
+        }
+
+        private void cmiResetSettingToDefault_Click(object sender, EventArgs e)
+        {
+            TreeNode node = this.treeCustomSettings.SelectedNode;
+            ASLSetting setting = (ASLSetting)node.Tag;
+            if (_default_values != null && _default_values.ContainsKey(setting.Id))
+                node.Checked = _default_values[setting.Id];
         }
     }
 
