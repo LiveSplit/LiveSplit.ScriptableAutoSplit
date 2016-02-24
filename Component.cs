@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.ASL;
@@ -33,7 +34,10 @@ namespace LiveSplit.UI.Components
             _settings = new ComponentSettings();
 
             _fs_watcher = new FileSystemWatcher();
-            _fs_watcher.Changed += (sender, args) => _do_reload = true;
+            _fs_watcher.Changed += async (sender, args) => {
+                await Task.Delay(200);
+                _do_reload = true;
+            };
 
             // -try- to run a little faster than 60hz
             // note: Timer isn't very reliable and quite often takes ~30ms
