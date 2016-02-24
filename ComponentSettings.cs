@@ -11,13 +11,26 @@ namespace LiveSplit.UI.Components
     {
         public string ScriptPath { get; set; }
 
-        // Save the state of settings independant of actual ASLSetting
-        // objects (which are specific to the loaded ASL Script instance).
+
+        // Save the state of settings independant of actual ASLSetting objects
+        // or the actual GUI components (checkboxes). This is used to restore
+        // the state when the script is first loaded (because settings are
+        // loaded before the script) or reloaded.
         //
-        // This is used to restore the correct state when the ASL
-        // Script is first loaded or reloaded.
+        // State is synchronized with the ASLSettings when a script is
+        // successfully loaded, as well as when the checkboxes/tree check
+        // state is changed by the user or program. It is also updated
+        // when loaded from XML.
+        //
+        // State is stored from the current script, or the last loaded script
+        // if no script is currently loaded.
+
+        // Start/Reset/Split checkboxes
         private Dictionary<string, bool> _basic_settings_state;
+
+        // Custom settings
         private Dictionary<string, bool> _custom_settings_state;
+
 
         // For resetting to default values. This could also be handled
         // in a field in ASLSetting, but this dict can be used with the
@@ -83,21 +96,32 @@ namespace LiveSplit.UI.Components
         /// Populates the component with the settings defined in the ASL script.
         /// </summary>
         /// 
-        public void SetASLSettings(ASLSettings settings)
+        public void SetASLSettings(ASLSettings settings, bool script_loaded)
         {
+            if (string.IsNullOrWhiteSpace(ScriptPath))
+            {
+                _basic_settings_state.Clear();
+                _custom_settings_state.Clear();
+            }
+
             this.treeCustomSettings.BeginUpdate();
             this.treeCustomSettings.Nodes.Clear();
 
             var values = new Dictionary<string, bool>();
+            _default_values = new Dictionary<string, bool>();
 
             // Store temporary for easier lookup of parent nodes
             var flat = new Dictionary<string, TreeNode>();
 
             foreach (ASLSetting setting in settings.OrderedSettings)
             {
+                var value = setting.Value;
+                if (_custom_settings_state.ContainsKey(setting.Id))
+                    value = _custom_settings_state[setting.Id];
+
                 var node = new TreeNode(setting.Label) {
                     Tag = setting,
-                    Checked = setting.Value,
+                    Checked = value,
                     ContextMenuStrip = this.treeContextMenu2,
                     ToolTipText = setting.ToolTip
                 };
@@ -113,7 +137,8 @@ namespace LiveSplit.UI.Components
                 }
 
                 flat.Add(setting.Id, node);
-                values.Add(setting.Id, setting.Value);
+                _default_values.Add(setting.Id, setting.Value);
+                values.Add(setting.Id, value);
             }
 
             // Gray out deactivated nodes after all have been added
@@ -124,10 +149,12 @@ namespace LiveSplit.UI.Components
                 }
             }
 
-            _default_values = values;
-
-            // Update from saved state (from XML or stored between script reloads)
-            UpdateNodeCheckedState(_custom_settings_state);
+            // Only if a script was actually loaded, update current state with current ASL settings
+            // (which may be empty if the successfully loaded script has no settings, but shouldn't
+            // be empty because the script failed to load, which can happen frequently when working
+            // on ASL scripts)
+            if (script_loaded)
+                _custom_settings_state = values;
 
             treeCustomSettings.ExpandAll();
             treeCustomSettings.EndUpdate();
@@ -145,7 +172,11 @@ namespace LiveSplit.UI.Components
         {
             foreach (var item in _basic_settings)
             {
-                settings_node.AppendChild(SettingsHelper.ToElement(document, item.Key, item.Value.Checked));
+                if (_basic_settings_state.ContainsKey(item.Key.ToLower()))
+                {
+                    var value = _basic_settings_state[item.Key.ToLower()];
+                    settings_node.AppendChild(SettingsHelper.ToElement(document, item.Key, value));
+                }
             }
         }
 
@@ -153,10 +184,10 @@ namespace LiveSplit.UI.Components
         {
             XmlElement asl_parent = document.CreateElement("CustomSettings");
 
-            foreach (ASLSetting setting in GetListOfCustomSettings())
+            foreach (var setting in _custom_settings_state)
             {
                 XmlElement element = SettingsHelper.ToElement(document, "Setting", setting.Value);
-                XmlAttribute id = SettingsHelper.ToAttribute(document, "id", setting.Id);
+                XmlAttribute id = SettingsHelper.ToAttribute(document, "id", setting.Key);
                 // In case there are other setting types in the future
                 XmlAttribute type = SettingsHelper.ToAttribute(document, "type", "bool");
 
@@ -168,29 +199,20 @@ namespace LiveSplit.UI.Components
             parent.AppendChild(asl_parent);
         }
 
-        /// <summary>
-        /// Gets a flat list of all custom settings from the settings tree.
-        /// </summary>
-        ///
-        private List<ASLSetting> GetListOfCustomSettings()
-        {
-            var list = new List<ASLSetting>();
-
-            UpdateNodesInTree(node => {
-                list.Add((ASLSetting)node.Tag);
-                return true;
-            }, this.treeCustomSettings.Nodes);
-
-            return list;
-        }
-
         private void ParseBasicSettingsFromXml(XmlElement element)
         {
             foreach (var item in _basic_settings)
             {
-                bool value = SettingsHelper.ParseBool(element[item.Key], true);
-                item.Value.Checked = value;
-                _basic_settings_state[item.Key.ToLower()] = value;
+                if (element[item.Key] != null)
+                {
+                    var value = bool.Parse(element[item.Key].InnerText);
+
+                    // If component is not enabled, don't check setting
+                    if (item.Value.Enabled)
+                        item.Value.Checked = value;
+
+                    _basic_settings_state[item.Key.ToLower()] = value;
+                }
             }
         }
 
@@ -200,7 +222,6 @@ namespace LiveSplit.UI.Components
         /// 
         private void ParseCustomSettingsFromXml(XmlElement data)
         {
-            var result = new Dictionary<string, bool>();
             XmlElement custom_settings_node = data["CustomSettings"];
 
             if (custom_settings_node != null && custom_settings_node.HasChildNodes)
@@ -216,12 +237,11 @@ namespace LiveSplit.UI.Components
                     if (id != null && type == "bool")
                     {
                         bool value = SettingsHelper.ParseBool(element);
-                        result.Add(id, value);
+                        _custom_settings_state[id] = value;
                     }
                 }
             }
 
-            _custom_settings_state = result;
             // Update tree with loaded state (in case the tree is already populated)
             UpdateNodeCheckedState(_custom_settings_state);
         }
@@ -238,7 +258,7 @@ namespace LiveSplit.UI.Components
                     ASLSetting setting = settings.BasicSettings[name];
                     checkbox.Enabled = true;
                     checkbox.Tag = setting;
-                    var value = true;
+                    var value = setting.Value;
 
                     if (_basic_settings_state.ContainsKey(name))
                         value = _basic_settings_state[name];
@@ -352,6 +372,9 @@ namespace LiveSplit.UI.Components
         }
 
         // Basic Setting checked/unchecked
+        //
+        // This detects both changes made by the user and by the program, so this should
+        // change the state in _basic_settings_state fine as well.
         private void methodCheckbox_CheckedChanged(object sender, EventArgs e)
         {
             var checkbox = (CheckBox)sender;
