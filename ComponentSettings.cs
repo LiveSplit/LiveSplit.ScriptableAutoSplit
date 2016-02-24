@@ -219,11 +219,10 @@ namespace LiveSplit.UI.Components
                         result.Add(id, value);
                     }
                 }
-            }
-
-            _custom_settings_state = result;
-            // Update tree with loaded state (in case the tree is already populated)
-            UpdateNodeCheckedState(_custom_settings_state);
+                _custom_settings_state = result;
+                // Update tree with loaded state (in case the tree is already populated)
+                UpdateNodeCheckedState(_custom_settings_state);
+            } 
         }
 
         private void InitBasicSettings(ASLSettings settings)
