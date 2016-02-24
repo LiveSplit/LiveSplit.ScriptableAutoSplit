@@ -152,7 +152,7 @@ namespace LiveSplit.UI.Components
             try
             {
                 ASLSettings settings = Script.RunStartup(_state);
-                _settings.SetASLSettings(settings);
+                _settings.SetASLSettings(settings, true);
             }
             catch (Exception ex)
             {
@@ -179,7 +179,7 @@ namespace LiveSplit.UI.Components
             {
                 Script.Dispose();
                 _settings.SetGameVersion(null);
-                _settings.SetASLSettings(new ASLSettings());
+                _settings.SetASLSettings(new ASLSettings(), false);
 
                 // Script should no longer be used, even in case of error
                 // (which the ASL shutdown method may contain)
