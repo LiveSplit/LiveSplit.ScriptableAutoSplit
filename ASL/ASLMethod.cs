@@ -39,13 +39,14 @@ using System.Threading;
 using System.Windows.Forms;
 using LiveSplit.ComponentUtil;
 using LiveSplit.Model;
+using LiveSplit.Options;
 public class CompiledScript
 {{
     public string version;
     public double refreshRate;
     void print(string s)
     {{
-        Trace.WriteLine(s);
+        Log.Info(s);
     }}
     public dynamic Execute(LiveSplitState timer, dynamic old, dynamic current, dynamic vars, Process game, dynamic settings)
     {{

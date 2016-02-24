@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using LiveSplit.Options;
 
 namespace LiveSplit.ASL
 {
@@ -69,7 +69,7 @@ namespace LiveSplit.ASL
             if (Settings.ContainsKey(name))
                 return GetSettingValueRecursive(Settings[name]);
 
-            Trace.WriteLine("[ASL] Custom Setting Key doesn't exist: " + name);
+            Log.Info("[ASL] Custom Setting Key doesn't exist: " + name);
 
             return false;
         }

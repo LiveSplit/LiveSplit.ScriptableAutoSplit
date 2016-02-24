@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using LiveSplit.Model;
+using LiveSplit.Options;
 
 namespace LiveSplit.ASL
 {
@@ -286,7 +287,7 @@ namespace LiveSplit.ASL
 
         private void Debug(string output, params object[] args)
         {
-            Trace.WriteLine(String.Format("[ASL/{1}] {0}",
+            Log.Info(String.Format("[ASL/{1}] {0}",
                 String.Format(output, args),
                 this.GetHashCode()));
         }

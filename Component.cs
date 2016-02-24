@@ -131,7 +131,7 @@ namespace LiveSplit.UI.Components
 
         private void LoadScript()
         {
-            Trace.WriteLine("[ASL] Loading new script: " + _settings.ScriptPath);
+            Log.Info("[ASL] Loading new script: " + _settings.ScriptPath);
 
             _fs_watcher.Path = Path.GetDirectoryName(_settings.ScriptPath);
             _fs_watcher.Filter = Path.GetFileName(_settings.ScriptPath);
