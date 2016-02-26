@@ -11,6 +11,7 @@ namespace LiveSplit.UI.Components
     {
         public string ScriptPath { get; set; }
 
+        private Dictionary<string, CheckBox> _basic_settings;
 
         // Save the state of settings independant of actual ASLSetting objects
         // or the actual GUI components (checkboxes). This is used to restore
@@ -31,13 +32,6 @@ namespace LiveSplit.UI.Components
         // Custom settings
         private Dictionary<string, bool> _custom_settings_state;
 
-
-        // For resetting to default values. This could also be handled
-        // in a field in ASLSetting, but this dict can be used with the
-        // same method to update the tree as _customSettingsState.
-        private Dictionary<string, bool> _default_values;
-
-        private Dictionary<string, CheckBox> _basic_settings;
 
         public ComponentSettings()
         {
@@ -95,8 +89,21 @@ namespace LiveSplit.UI.Components
         /// <summary>
         /// Populates the component with the settings defined in the ASL script.
         /// </summary>
-        /// 
-        public void SetASLSettings(ASLSettings settings, bool script_loaded)
+        public void SetASLSettings(ASLSettings settings)
+        {
+            InitASLSettings(settings, true);
+        }
+
+        /// <summary>
+        /// Empties the GUI of all settings (but still keeps settings state
+        /// for the next script load).
+        /// </summary>
+        public void ResetASLSettings()
+        {
+            InitASLSettings(new ASLSettings(), false);
+        }
+
+        private void InitASLSettings(ASLSettings settings, bool script_loaded)
         {
             if (string.IsNullOrWhiteSpace(ScriptPath))
             {
@@ -108,7 +115,6 @@ namespace LiveSplit.UI.Components
             this.treeCustomSettings.Nodes.Clear();
 
             var values = new Dictionary<string, bool>();
-            _default_values = new Dictionary<string, bool>();
 
             // Store temporary for easier lookup of parent nodes
             var flat = new Dictionary<string, TreeNode>();
@@ -138,7 +144,6 @@ namespace LiveSplit.UI.Components
                 }
 
                 flat.Add(setting.Id, node);
-                _default_values.Add(setting.Id, setting.DefaultValue);
                 values.Add(setting.Id, value);
             }
 
@@ -244,7 +249,7 @@ namespace LiveSplit.UI.Components
             }
 
             // Update tree with loaded state (in case the tree is already populated)
-            UpdateNodeCheckedState(_custom_settings_state);
+            UpdateNodesCheckedState(_custom_settings_state);
         }
 
         private void InitBasicSettings(ASLSettings settings)
@@ -287,26 +292,6 @@ namespace LiveSplit.UI.Components
         }
 
         /// <summary>
-        /// Update the checked state of all given nodes and their childnodes
-        /// based on a dictionary of setting values.
-        /// </summary>
-        /// 
-        private void UpdateNodeCheckedState(Dictionary<string, bool> setting_values, TreeNodeCollection nodes = null)
-        {
-            if (setting_values == null)
-                return;
-
-            UpdateNodeCheckedState(setting => {
-                string id = setting.Id;
-
-                if (setting_values.ContainsKey(id))
-                    return setting_values[id];
-
-                return setting.Value;
-            }, nodes);
-        }
-
-        /// <summary>
         /// Generic update on all given nodes and their childnodes, ignoring childnodes for
         /// nodes where the Func returns false.
         /// </summary>
@@ -327,7 +312,7 @@ namespace LiveSplit.UI.Components
         /// </summary>
         /// <param name="nodes">If nodes is null, all nodes of the custom settings tree are affected.</param>
         /// 
-        private void UpdateNodeCheckedState(Func<ASLSetting, bool> func, TreeNodeCollection nodes = null)
+        private void UpdateNodesCheckedState(Func<ASLSetting, bool> func, TreeNodeCollection nodes = null)
         {
             if (nodes == null)
                 nodes = this.treeCustomSettings.Nodes;
@@ -341,6 +326,35 @@ namespace LiveSplit.UI.Components
 
                 return true;
             }, nodes);
+        }
+
+        /// <summary>
+        /// Update the checked state of all given nodes and their childnodes
+        /// based on a dictionary of setting values.
+        /// </summary>
+        /// 
+        private void UpdateNodesCheckedState(Dictionary<string, bool> setting_values, TreeNodeCollection nodes = null)
+        {
+            if (setting_values == null)
+                return;
+
+            UpdateNodesCheckedState(setting => {
+                string id = setting.Id;
+
+                if (setting_values.ContainsKey(id))
+                    return setting_values[id];
+
+                return setting.Value;
+            }, nodes);
+        }
+
+        private void UpdateNodeCheckedState(Func<ASLSetting, bool> func, TreeNode node)
+        {
+            var setting = (ASLSetting)node.Tag;
+            bool check = func(setting);
+
+            if (node.Checked != check)
+                node.Checked = check;
         }
 
         /// <summary>
@@ -388,7 +402,7 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        // Custom Setting checked/unchecked
+        // Custom Setting checked/unchecked (only after initially building the tree)
         private void settingsTree_AfterCheck(object sender, TreeViewEventArgs e)
         {
             // Update value in the ASLSetting object, which also changes it in the ASL script
@@ -404,17 +418,17 @@ namespace LiveSplit.UI.Components
 
         private void btnCheckAll_Click(object sender, EventArgs e)
         {
-            UpdateNodeCheckedState(id => true);
+            UpdateNodesCheckedState(s => true);
         }
 
         private void btnUncheckAll_Click(object sender, EventArgs e)
         {
-            UpdateNodeCheckedState(id => false);
+            UpdateNodesCheckedState(s => false);
         }
 
         private void btnResetToDefault_Click(object sender, EventArgs e)
         {
-            UpdateNodeCheckedState(_default_values);
+            UpdateNodesCheckedState(s => s.DefaultValue);
         }
 
 
@@ -428,17 +442,20 @@ namespace LiveSplit.UI.Components
 
         private void cmiCheckBranch_Click(object sender, EventArgs e)
         {
-            UpdateNodeCheckedState(i => true, this.treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodesCheckedState(s => true, this.treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeCheckedState(s => true, this.treeCustomSettings.SelectedNode);
         }
 
         private void cmiUncheckBranch_Click(object sender, EventArgs e)
         {
-            UpdateNodeCheckedState(i => false, this.treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodesCheckedState(s => false, this.treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeCheckedState(s => false, this.treeCustomSettings.SelectedNode);
         }
 
         private void cmiResetBranchToDefault_Click(object sender, EventArgs e)
         {
-            UpdateNodeCheckedState(_default_values, this.treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodesCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode.Nodes);
+            UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);
         }
 
         private void cmiExpandBranch_Click(object sender, EventArgs e)
@@ -474,10 +491,7 @@ namespace LiveSplit.UI.Components
 
         private void cmiResetSettingToDefault_Click(object sender, EventArgs e)
         {
-            TreeNode node = this.treeCustomSettings.SelectedNode;
-            ASLSetting setting = (ASLSetting)node.Tag;
-            if (_default_values != null && _default_values.ContainsKey(setting.Id))
-                node.Checked = _default_values[setting.Id];
+            UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);
         }
     }
 
