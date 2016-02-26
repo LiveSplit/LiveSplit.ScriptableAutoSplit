@@ -125,6 +125,7 @@ namespace LiveSplit.UI.Components
                     ContextMenuStrip = this.treeContextMenu2,
                     ToolTipText = setting.ToolTip
                 };
+                setting.Value = value;
 
                 if (setting.Parent == null)
                 {
@@ -137,7 +138,7 @@ namespace LiveSplit.UI.Components
                 }
 
                 flat.Add(setting.Id, node);
-                _default_values.Add(setting.Id, setting.Value);
+                _default_values.Add(setting.Id, setting.DefaultValue);
                 values.Add(setting.Id, value);
             }
 

@@ -10,6 +10,7 @@ namespace LiveSplit.ASL
         public string Id { get; }
         public string Label { get; }
         public bool Value { get; set; }
+        public bool DefaultValue { get; }
         public string Parent { get; }
         public string ToolTip { get; set; }
 
@@ -17,6 +18,7 @@ namespace LiveSplit.ASL
         {
             Id = id;
             Value = default_value;
+            DefaultValue = default_value;
             Label = label;
             Parent = parent;
         }
