@@ -8,7 +8,7 @@ using LiveSplit.Options;
 
 namespace LiveSplit.ASL
 {
-    public class ASLScript : IDisposable
+    public class ASLScript
     {
         public class Methods
         {
@@ -86,12 +86,6 @@ namespace LiveSplit.ASL
                 _settings.AddBasicSetting("reset");
 
             _uses_game_time = !_methods.isLoading.IsEmpty || !_methods.gameTime.IsEmpty;
-        }
-
-        public void Dispose()
-        {
-            RefreshRateChanged = null;
-            GameVersionChanged = null;
         }
 
         // Update the script

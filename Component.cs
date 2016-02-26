@@ -177,7 +177,6 @@ namespace LiveSplit.UI.Components
             }
             finally
             {
-                Script.Dispose();
                 _settings.SetGameVersion(null);
                 _settings.ResetASLSettings();
 
