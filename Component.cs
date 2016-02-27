@@ -58,6 +58,15 @@ namespace LiveSplit.UI.Components
         public override void Dispose()
         {
             ScriptCleanup();
+            
+            try
+            {
+                ScriptChanged?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
 
             _fs_watcher?.Dispose();
             _update_timer?.Dispose();
@@ -110,10 +119,7 @@ namespace LiveSplit.UI.Components
                         LoadScript();
                     }
 
-                    if (ScriptChanged != null)
-                    {
-                        ScriptChanged(this, new EventArgs());
-                    }
+                    ScriptChanged?.Invoke(this, EventArgs.Empty);
                 }
                 catch (Exception ex)
                 {
