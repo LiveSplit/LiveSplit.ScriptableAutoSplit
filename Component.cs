@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -16,6 +16,8 @@ namespace LiveSplit.UI.Components
 
         // public so other components (ASLVarViewer) can access
         public ASLScript Script { get; private set; }
+
+        public event EventHandler ScriptChanged;
 
         private bool _do_reload;
         private string _old_script_path;
@@ -56,6 +58,15 @@ namespace LiveSplit.UI.Components
         public override void Dispose()
         {
             ScriptCleanup();
+            
+            try
+            {
+                ScriptChanged?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
 
             _fs_watcher?.Dispose();
             _update_timer?.Dispose();
@@ -107,6 +118,8 @@ namespace LiveSplit.UI.Components
                     {
                         LoadScript();
                     }
+
+                    ScriptChanged?.Invoke(this, EventArgs.Empty);
                 }
                 catch (Exception ex)
                 {
