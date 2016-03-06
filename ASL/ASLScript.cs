@@ -129,11 +129,11 @@ namespace LiveSplit.ASL
         {
             _game = null;
 
-            var state_process = _states.Keys.Select(proccessName => new
-            {
+            var state_process = _states.Keys.Select(proccessName => new {
                 // default to the state with no version specified, if it exists
                 State = _states[proccessName].FirstOrDefault(s => s.GameVersion == "") ?? _states[proccessName].First(),
-                Process = Process.GetProcessesByName(proccessName).FirstOrDefault(x => !x.HasExited)
+                Process = Process.GetProcessesByName(proccessName).OrderByDescending(x => x.StartTime)
+                    .FirstOrDefault(x => !x.HasExited)
             }).FirstOrDefault(x => x.Process != null);
 
             if (state_process == null)
