@@ -367,7 +367,7 @@ namespace LiveSplit.UI.Components
             {
                 UpdateNodesInTree(n => {
                     n.ForeColor = node.Checked ? SystemColors.WindowText : SystemColors.GrayText;
-                    return n.Checked;
+                    return n.Checked || !node.Checked;
                 }, node.Nodes);
             }
         }
