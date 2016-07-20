@@ -52,6 +52,10 @@ namespace LiveSplit.ASL
                     return pointer.Deref<int>(p);
                 case "uint":
                     return pointer.Deref<uint>(p);
+                case "long":
+                    return pointer.Deref<long>(p);
+                case "ulong":
+                    return pointer.Deref<ulong>(p);
                 case "float":
                     return pointer.Deref<float>(p);
                 case "double":
