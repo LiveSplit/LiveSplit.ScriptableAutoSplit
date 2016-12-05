@@ -52,7 +52,7 @@ namespace LiveSplit.UI.Components
         public ASLComponent(LiveSplitState state, string script_path)
             : this(state)
         {
-            _settings = new ComponentSettings() { ScriptPath = script_path };
+            _settings = new ComponentSettings(script_path);
         }
 
         public override void Dispose()

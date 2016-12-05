@@ -11,6 +11,9 @@ namespace LiveSplit.UI.Components
     {
         public string ScriptPath { get; set; }
 
+        // if true, next path loaded from settings will be ignored
+        private bool _ignore_next_path_setting;
+
         private Dictionary<string, CheckBox> _basic_settings;
 
         // Save the state of settings independant of actual ASLSetting objects
@@ -56,6 +59,13 @@ namespace LiveSplit.UI.Components
             _custom_settings_state = new Dictionary<string, bool>();
         }
 
+        public ComponentSettings(string scriptPath)
+            : this()
+        {
+            ScriptPath = scriptPath;
+            _ignore_next_path_setting = true;
+        }
+
         public XmlNode GetSettings(XmlDocument document)
         {
             XmlElement settings_node = document.CreateElement("Settings");
@@ -75,7 +85,9 @@ namespace LiveSplit.UI.Components
             var element = (XmlElement)settings;
             if (!element.IsEmpty)
             {
-                ScriptPath = SettingsHelper.ParseString(element["ScriptPath"], string.Empty);
+                if (!_ignore_next_path_setting)
+                    ScriptPath = SettingsHelper.ParseString(element["ScriptPath"], string.Empty);
+                _ignore_next_path_setting = false;
                 ParseBasicSettingsFromXml(element);
                 ParseCustomSettingsFromXml(element);
             }
