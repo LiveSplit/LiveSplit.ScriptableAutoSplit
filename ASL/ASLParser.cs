@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Irony.Parsing;
+using LiveSplit.ComponentUtil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Irony.Parsing;
-using LiveSplit.ComponentUtil;
+using System.Text;
 
 namespace LiveSplit.ASL
 {
@@ -15,7 +16,16 @@ namespace LiveSplit.ASL
             var tree = parser.Parse(code);
 
             if (tree.HasErrors())
-                throw new Exception("ASL parse error(s): " + string.Join("\n", tree.ParserMessages));
+            {
+                var errorMsg = new StringBuilder("ASL parse error(s):");
+                foreach (var msg in parser.Context.CurrentParseTree.ParserMessages)
+                {
+                    var loc = msg.Location;
+                    errorMsg.Append($"\nat Line {loc.Line + 1}, Col {loc.Column + 1}: {msg.Message}");
+                }
+
+                throw new Exception(errorMsg.ToString());
+            }
 
             var root_childs = tree.Root.ChildNodes;
             var methods_node = root_childs.First(x => x.Term.Name == "methodList");
@@ -62,8 +72,10 @@ namespace LiveSplit.ASL
 
             foreach (var method in methods_node.ChildNodes[0].ChildNodes)
             {
+                var body = (string)method.ChildNodes[2].Token.Value;
                 var method_name = (string)method.ChildNodes[0].Token.Value;
-                var script = new ASLMethod((string)method.ChildNodes[2].Token.Value);
+                var line = method.ChildNodes[2].Token.Location.Line;
+                var script = new ASLMethod(body, method_name, line);
                 switch (method_name)
                 {
                     case "init": methods.init = script; break;

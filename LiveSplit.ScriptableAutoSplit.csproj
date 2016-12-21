@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ASL\ASLExceptions.cs" />
     <Compile Include="ASL\ASLGrammar.cs" />
     <Compile Include="ASL\ASLMethod.cs" />
     <Compile Include="ASL\ASLParser.cs" />
