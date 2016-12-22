@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
+using System.Reflection;
 
 namespace LiveSplit.ASL
 {
@@ -17,6 +18,8 @@ namespace LiveSplit.ASL
         public int Line { get; }
 
         public int CompiledCodeLine { get; }
+
+        public Module Module { get; }
 
         private dynamic _compiled_code;
 
@@ -88,10 +91,10 @@ public class CompiledScript
                 parameters.ReferencedAssemblies.Add("LiveSplit.Core.dll");
 
                 var res = provider.CompileAssemblyFromSource(parameters, source);
-
                 if (res.Errors.HasErrors)
                     throw new ASLCompilerException(this, res.Errors);
 
+                Module = res.CompiledAssembly.ManifestModule;
                 var type = res.CompiledAssembly.GetType("CompiledScript");
                 _compiled_code = Activator.CreateInstance(type);
             }

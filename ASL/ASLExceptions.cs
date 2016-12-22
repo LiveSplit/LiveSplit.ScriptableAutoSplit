@@ -52,7 +52,7 @@ namespace LiveSplit.ASL
             var line_str = string.Empty;
             var stack_trace = new StackTrace(inner_exception, true);
             var frame = stack_trace.GetFrames()
-                .FirstOrDefault(f => f.GetMethod().ReflectedType?.Name == "CompiledScript");
+                .FirstOrDefault(f => f.GetMethod().Module == method.Module);
             if (frame != null)
             {
                 var frame_line = frame.GetFileLineNumber();
