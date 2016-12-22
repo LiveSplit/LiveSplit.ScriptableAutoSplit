@@ -70,7 +70,7 @@ public class CompiledScript
 }}";
 
                 var user_code_index = source.IndexOf(user_code_start_marker);
-                CompiledCodeLine = source.Take(user_code_index).Count(c => c == '\n') + 1;
+                CompiledCodeLine = source.Take(user_code_index).Count(c => c == '\n') + 2;
 
                 var parameters = new CompilerParameters() {
                     GenerateInMemory = true,

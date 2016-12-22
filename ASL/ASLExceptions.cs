@@ -1,7 +1,8 @@
 ﻿using System;
 using System.CodeDom.Compiler;
+using System.Diagnostics;
+using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace LiveSplit.ASL
 {
@@ -37,8 +38,6 @@ namespace LiveSplit.ASL
 
     public class ASLRuntimeException : Exception
     {
-        static readonly Regex _stack_trace_regex = new Regex(@".+:line (\d+)", RegexOptions.IgnoreCase);
-
         public ASLRuntimeException(ASLMethod method, Exception inner_exception)
             : base(GetMessage(method, inner_exception), inner_exception)
         { }
@@ -51,12 +50,17 @@ namespace LiveSplit.ASL
                 throw new ArgumentNullException(nameof(inner_exception));
 
             var line_str = string.Empty;
-            var match = _stack_trace_regex.Match(inner_exception.StackTrace);
-            if (match != null)
+            var stack_trace = new StackTrace(inner_exception, true);
+            var frame = stack_trace.GetFrames()
+                .FirstOrDefault(f => f.GetMethod().ReflectedType?.Name == "CompiledScript");
+            if (frame != null)
             {
-                var line = int.Parse(match.Groups[1].Value);
-                line = method.Line + line - method.CompiledCodeLine;
-                line_str = $" at line {line}";
+                var frame_line = frame.GetFileLineNumber();
+                if (frame_line > 0)
+                {
+                    var line = method.Line + frame_line - method.CompiledCodeLine;
+                    line_str = " at line " + line;
+                }
             }
 
             var exception_name = inner_exception.GetType().FullName;
