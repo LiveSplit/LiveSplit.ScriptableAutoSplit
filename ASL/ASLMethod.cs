@@ -11,6 +11,8 @@ namespace LiveSplit.ASL
 {
     public class ASLMethod
     {
+        public ASLScript.Methods ScriptMethods { get; set; }
+
         public string Name { get; }
 
         public bool IsEmpty { get; }

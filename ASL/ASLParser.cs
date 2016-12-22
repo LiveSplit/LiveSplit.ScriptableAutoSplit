@@ -75,7 +75,10 @@ namespace LiveSplit.ASL
                 var body = (string)method.ChildNodes[2].Token.Value;
                 var method_name = (string)method.ChildNodes[0].Token.Value;
                 var line = method.ChildNodes[2].Token.Location.Line + 1;
-                var script = new ASLMethod(body, method_name, line);
+                var script = new ASLMethod(body, method_name, line)
+                {
+                    ScriptMethods = methods
+                };
                 switch (method_name)
                 {
                     case "init": methods.init = script; break;

@@ -49,24 +49,35 @@ namespace LiveSplit.ASL
             if (inner_exception == null)
                 throw new ArgumentNullException(nameof(inner_exception));
 
-            var line_str = string.Empty;
             var stack_trace = new StackTrace(inner_exception, true);
-            var frame = stack_trace.GetFrames()
-                .FirstOrDefault(f => f.GetMethod().Module == method.Module);
-            if (frame != null)
+            var stack_trace_sb = new StringBuilder();
+            foreach (var frame in stack_trace.GetFrames())
             {
+                var frame_method = frame.GetMethod();
+                var frame_module = frame_method.Module;
+
+                var frame_asl_method = method;
+                if (method.ScriptMethods != null)
+                {
+                    frame_asl_method = method.ScriptMethods.FirstOrDefault(m => frame_module == m.Module);
+                    if (frame_asl_method == null)
+                        continue;
+                }
+                else if (frame_module != method.Module)
+                    continue;
+
                 var frame_line = frame.GetFileLineNumber();
                 if (frame_line > 0)
                 {
-                    var line = frame_line + method.LineOffset;
-                    line_str = " at line " + line;
+                    var line = frame_line + frame_asl_method.LineOffset;
+                    stack_trace_sb.Append($"\n   at ASL line {line} in '{frame_asl_method.Name}'");
                 }
             }
 
             var exception_name = inner_exception.GetType().FullName;
             var method_name = method.Name ?? "(no name)";
-            var message = inner_exception.Message;
-            return $"Exception thrown: '{exception_name}' in '{method_name}' method{line_str}:\n{message}";
+            var exception_message = inner_exception.Message;
+            return $"Exception thrown: '{exception_name}' in '{method_name}' method:\n{exception_message}\n{stack_trace_sb.ToString()}";
         }
     }
 }

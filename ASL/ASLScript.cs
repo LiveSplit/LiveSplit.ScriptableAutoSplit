@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -10,7 +11,7 @@ namespace LiveSplit.ASL
 {
     public class ASLScript
     {
-        public class Methods
+        public class Methods : IEnumerable<ASLMethod>
         {
             private static ASLMethod no_op = new ASLMethod("");
 
@@ -24,6 +25,26 @@ namespace LiveSplit.ASL
             public ASLMethod reset = no_op;
             public ASLMethod isLoading = no_op;
             public ASLMethod gameTime = no_op;
+
+            public ASLMethod[] GetMethods()
+            {
+                return new ASLMethod[]
+                {
+                    startup,
+                    shutdown,
+                    init,
+                    exit,
+                    update,
+                    start,
+                    split,
+                    reset,
+                    isLoading,
+                    gameTime
+                };
+            }
+
+            public IEnumerator<ASLMethod> GetEnumerator() => ((IEnumerable<ASLMethod>)GetMethods()).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetMethods().GetEnumerator();
         }
 
         public event EventHandler<double> RefreshRateChanged;
