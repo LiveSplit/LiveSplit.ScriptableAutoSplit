@@ -1,22 +1,34 @@
-﻿using System;
+﻿using LiveSplit.Model;
+using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
-using LiveSplit.Model;
+using System.Linq;
+using System.Reflection;
 
 namespace LiveSplit.ASL
 {
     public class ASLMethod
     {
+        public ASLScript.Methods ScriptMethods { get; set; }
+
+        public string Name { get; }
+
         public bool IsEmpty { get; }
+
+        public int LineOffset { get; }
+
+        public Module Module { get; }
 
         private dynamic _compiled_code;
 
-        public ASLMethod(string code)
+        public ASLMethod(string code, string name = null, int script_line = 0)
         {
             if (code == null)
                 throw new ArgumentNullException(nameof(code));
 
+            Name = name;
             IsEmpty = string.IsNullOrWhiteSpace(code);
             code = code.Replace("return;", "return null;"); // hack
 
@@ -26,6 +38,7 @@ namespace LiveSplit.ASL
 
             using (var provider = new Microsoft.CSharp.CSharpCodeProvider(options))
             {
+                var user_code_start_marker = "// USER_CODE_START";
                 string source = $@"
 using System;
 using System.Collections.Generic;
@@ -52,14 +65,22 @@ public class CompiledScript
     {{
         var memory = game;
         var modules = game != null ? game.ModulesWow64Safe() : null;
+        { user_code_start_marker }
 	    { code }
 	    return null;
     }}
 }}";
 
-                var parameters = new System.CodeDom.Compiler.CompilerParameters() {
+                if (script_line > 0)
+                {
+                    var user_code_index = source.IndexOf(user_code_start_marker);
+                    var compiled_code_line = source.Take(user_code_index).Count(c => c == '\n') + 2;
+                    LineOffset = script_line - compiled_code_line;
+                }
+
+                var parameters = new CompilerParameters() {
                     GenerateInMemory = true,
-                    CompilerOptions = "/optimize /d:TRACE",
+                    CompilerOptions = "/optimize /d:TRACE /debug:pdbonly",
                 };
                 parameters.ReferencedAssemblies.Add("System.dll");
                 parameters.ReferencedAssemblies.Add("System.Core.dll");
@@ -73,17 +94,10 @@ public class CompiledScript
                 parameters.ReferencedAssemblies.Add("LiveSplit.Core.dll");
 
                 var res = provider.CompileAssemblyFromSource(parameters, source);
-
                 if (res.Errors.HasErrors)
-                {
-                    var errorMessage = "";
-                    foreach (var error in res.Errors)
-                    {
-                        errorMessage += error + "\r\n";
-                    }
-                    throw new ArgumentException(errorMessage, nameof(code));
-                }
+                    throw new ASLCompilerException(this, res.Errors);
 
+                Module = res.CompiledAssembly.ManifestModule;
                 var type = res.CompiledAssembly.GetType("CompiledScript");
                 _compiled_code = Activator.CreateInstance(type);
             }
@@ -95,7 +109,15 @@ public class CompiledScript
             // dynamic args can't be ref or out, this is a workaround
             _compiled_code.version = version;
             _compiled_code.refreshRate = refreshRate;
-            var ret = _compiled_code.Execute(timer, old, current, vars, game, settings);
+            dynamic ret;
+            try
+            {
+                ret = _compiled_code.Execute(timer, old, current, vars, game, settings);
+            }
+            catch (Exception ex)
+            {
+                throw new ASLRuntimeException(this, ex);
+            }
             version = _compiled_code.version;
             refreshRate = _compiled_code.refreshRate;
             return ret;
