@@ -29,7 +29,7 @@ namespace LiveSplit.ASL
             var sb = new StringBuilder($"'{method.Name ?? "(no name)"}' method compilation errors:");
             foreach (CompilerError error in errors)
             {
-                error.Line = method.Line + error.Line - method.CompiledCodeLine;
+                error.Line = error.Line + method.LineOffset;
                 sb.Append($"\nLine {error.Line}, Col {error.Column}: {(error.IsWarning ? "warning" : "error")} {error.ErrorNumber}: {error.ErrorText}");
             }
             return sb.ToString();
@@ -58,7 +58,7 @@ namespace LiveSplit.ASL
                 var frame_line = frame.GetFileLineNumber();
                 if (frame_line > 0)
                 {
-                    var line = method.Line + frame_line - method.CompiledCodeLine;
+                    var line = frame_line + method.LineOffset;
                     line_str = " at line " + line;
                 }
             }

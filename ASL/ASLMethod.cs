@@ -15,21 +15,18 @@ namespace LiveSplit.ASL
 
         public bool IsEmpty { get; }
 
-        public int Line { get; }
-
-        public int CompiledCodeLine { get; }
+        public int LineOffset { get; }
 
         public Module Module { get; }
 
         private dynamic _compiled_code;
 
-        public ASLMethod(string code, string name = null, int line = 0)
+        public ASLMethod(string code, string name = null, int script_line = 0)
         {
             if (code == null)
                 throw new ArgumentNullException(nameof(code));
 
             Name = name;
-            Line = line;
             IsEmpty = string.IsNullOrWhiteSpace(code);
             code = code.Replace("return;", "return null;"); // hack
 
@@ -72,8 +69,12 @@ public class CompiledScript
     }}
 }}";
 
-                var user_code_index = source.IndexOf(user_code_start_marker);
-                CompiledCodeLine = source.Take(user_code_index).Count(c => c == '\n') + 2;
+                if (script_line > 0)
+                {
+                    var user_code_index = source.IndexOf(user_code_start_marker);
+                    var compiled_code_line = source.Take(user_code_index).Count(c => c == '\n') + 2;
+                    LineOffset = script_line - compiled_code_line;
+                }
 
                 var parameters = new CompilerParameters() {
                     GenerateInMemory = true,
