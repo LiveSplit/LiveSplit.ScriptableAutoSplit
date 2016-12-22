@@ -37,32 +37,32 @@ namespace LiveSplit.ASL
 
     public class ASLRuntimeException : Exception
     {
-        static readonly Regex _stackTraceRegex = new Regex(@".+:line (\d+)", RegexOptions.IgnoreCase);
+        static readonly Regex _stack_trace_regex = new Regex(@".+:line (\d+)", RegexOptions.IgnoreCase);
 
-        public ASLRuntimeException(ASLMethod method, Exception innerException)
-            : base(GetMessage(method, innerException), innerException)
+        public ASLRuntimeException(ASLMethod method, Exception inner_exception)
+            : base(GetMessage(method, inner_exception), inner_exception)
         { }
 
-        static string GetMessage(ASLMethod method, Exception innerException)
+        static string GetMessage(ASLMethod method, Exception inner_exception)
         {
             if (method == null)
                 throw new ArgumentNullException(nameof(method));
-            if (innerException == null)
-                throw new ArgumentNullException(nameof(innerException));
+            if (inner_exception == null)
+                throw new ArgumentNullException(nameof(inner_exception));
 
-            var lineStr = string.Empty;
-            var match = _stackTraceRegex.Match(innerException.StackTrace);
+            var line_str = string.Empty;
+            var match = _stack_trace_regex.Match(inner_exception.StackTrace);
             if (match != null)
             {
                 var line = int.Parse(match.Groups[1].Value);
                 line = method.Line + line - method.CompiledCodeLine;
-                lineStr = $" at line {line}";
+                line_str = $" at line {line}";
             }
 
-            var exceptionName = innerException.GetType().FullName;
-            var methodName = method.Name ?? "(no name)";
-            var message = innerException.Message;
-            return $"Exception thrown: '{exceptionName}' in '{methodName}' method{lineStr}:\n{message}";
+            var exception_name = inner_exception.GetType().FullName;
+            var method_name = method.Name ?? "(no name)";
+            var message = inner_exception.Message;
+            return $"Exception thrown: '{exception_name}' in '{method_name}' method{line_str}:\n{message}";
         }
     }
 }

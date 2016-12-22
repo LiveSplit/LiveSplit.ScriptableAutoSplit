@@ -17,14 +17,14 @@ namespace LiveSplit.ASL
 
             if (tree.HasErrors())
             {
-                var errorMsg = new StringBuilder("ASL parse error(s):");
+                var error_msg = new StringBuilder("ASL parse error(s):");
                 foreach (var msg in parser.Context.CurrentParseTree.ParserMessages)
                 {
                     var loc = msg.Location;
-                    errorMsg.Append($"\nat Line {loc.Line + 1}, Col {loc.Column + 1}: {msg.Message}");
+                    error_msg.Append($"\nat Line {loc.Line + 1}, Col {loc.Column + 1}: {msg.Message}");
                 }
 
-                throw new Exception(errorMsg.ToString());
+                throw new Exception(error_msg.ToString());
             }
 
             var root_childs = tree.Root.ChildNodes;

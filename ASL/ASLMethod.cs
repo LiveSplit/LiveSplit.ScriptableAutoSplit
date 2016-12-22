@@ -36,7 +36,7 @@ namespace LiveSplit.ASL
 
             using (var provider = new Microsoft.CSharp.CSharpCodeProvider(options))
             {
-                var userCodeStartMarker = "// USER_CODE_START";
+                var user_code_start_marker = "// USER_CODE_START";
                 string source = $@"
 using System;
 using System.Collections.Generic;
@@ -63,14 +63,14 @@ public class CompiledScript
     {{
         var memory = game;
         var modules = game != null ? game.ModulesWow64Safe() : null;
-        { userCodeStartMarker }
+        { user_code_start_marker }
 	    { code }
 	    return null;
     }}
 }}";
 
-                var userCodeIndex = source.IndexOf(userCodeStartMarker);
-                CompiledCodeLine = source.Take(userCodeIndex).Count(c => c == '\n') + 1;
+                var user_code_index = source.IndexOf(user_code_start_marker);
+                CompiledCodeLine = source.Take(user_code_index).Count(c => c == '\n') + 1;
 
                 var parameters = new CompilerParameters() {
                     GenerateInMemory = true,
