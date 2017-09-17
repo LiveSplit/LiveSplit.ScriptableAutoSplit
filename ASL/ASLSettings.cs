@@ -156,6 +156,11 @@ namespace LiveSplit.ASL
         {
             get { return _s.GetSettingValue(id); }
         }
+        
+        public bool ContainsKey(string key)
+        {
+            return _s.Settings.ContainsKey(key);   
+        }
 
         public bool StartEnabled
         {
