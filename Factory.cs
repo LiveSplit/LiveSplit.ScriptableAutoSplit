@@ -11,7 +11,7 @@ namespace LiveSplit.UI.Components
         public string ComponentName => "Scriptable Auto Splitter";
         public string Description => "Allows scripts written in the ASL language to define the splitting behaviour.";
         public ComponentCategory Category => ComponentCategory.Control;
-        public Version Version => Version.Parse("1.7.0");
+        public Version Version => Version.Parse("1.7.5");
 
         public string UpdateName => ComponentName;
         public string UpdateURL => "http://livesplit.org/update/";
