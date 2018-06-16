@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Xml;
 using LiveSplit.ASL;
+using System.IO;
 
 namespace LiveSplit.UI.Components
 {
@@ -389,10 +390,15 @@ namespace LiveSplit.UI.Components
 
         private void btnSelectFile_Click(object sender, EventArgs e)
         {
-            var dialog = new OpenFileDialog() {
-                FileName = ScriptPath,
+            var dialog = new OpenFileDialog()
+            {
                 Filter = "Auto Split Script (*.asl)|*.asl|All Files (*.*)|*.*"
             };
+            if (File.Exists(ScriptPath))
+            {
+                dialog.InitialDirectory = Path.GetDirectoryName(ScriptPath);
+                dialog.FileName = Path.GetFileName(ScriptPath);
+            }
 
             if (dialog.ShowDialog() == DialogResult.OK)
                 ScriptPath = this.txtScriptPath.Text = dialog.FileName;
