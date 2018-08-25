@@ -11,6 +11,7 @@ namespace LiveSplit.ASL
         {
             var string_lit = TerminalFactory.CreateCSharpString("string");
             var number = TerminalFactory.CreateCSharpNumber("number");
+            number.Options |= NumberOptions.AllowSign;
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             var code = new CustomTerminal("code", MatchCodeTerminal);
 
