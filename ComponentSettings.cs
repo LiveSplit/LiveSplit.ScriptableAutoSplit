@@ -431,6 +431,10 @@ namespace LiveSplit.UI.Components
             UpdateGrayedOut(e.Node);
         }
 
+        private void settingsTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
+        {
+            e.Cancel = e.Node.ForeColor == SystemColors.GrayText;
+        }
 
         // Custom Settings Button Events
 
