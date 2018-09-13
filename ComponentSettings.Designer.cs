@@ -403,6 +403,7 @@
             this.treeCustomSettings.ShowNodeToolTips = true;
             this.treeCustomSettings.Size = new System.Drawing.Size(380, 390);
             this.treeCustomSettings.TabIndex = 14;
+            this.treeCustomSettings.BeforeCheck += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.settingsTree_BeforeCheck);
             this.treeCustomSettings.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.settingsTree_AfterCheck);
             this.treeCustomSettings.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.settingsTree_NodeMouseClick);
             // 
