@@ -46,6 +46,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -87,6 +88,7 @@ public class CompiledScript
                 parameters.ReferencedAssemblies.Add("System.Data.dll");
                 parameters.ReferencedAssemblies.Add("System.Data.DataSetExtensions.dll");
                 parameters.ReferencedAssemblies.Add("System.Drawing.dll");
+                parameters.ReferencedAssemblies.Add("System.Net.Http.dll");
                 parameters.ReferencedAssemblies.Add("System.Windows.Forms.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.dll");
                 parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
