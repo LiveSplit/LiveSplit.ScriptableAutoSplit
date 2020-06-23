@@ -41,6 +41,11 @@ namespace LiveSplit.UI.Components
                 _do_reload = true;
             };
 
+            _fs_watcher.Renamed += async (sender, args) => {
+              await Task.Delay(200);
+              _do_reload = true;
+            };
+
             // -try- to run a little faster than 60hz
             // note: Timer isn't very reliable and quite often takes ~30ms
             // we need to switch to threading
@@ -58,7 +63,7 @@ namespace LiveSplit.UI.Components
         public override void Dispose()
         {
             ScriptCleanup();
-            
+
             try
             {
                 ScriptChanged?.Invoke(this, EventArgs.Empty);
