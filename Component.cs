@@ -36,15 +36,15 @@ namespace LiveSplit.UI.Components
             _settings = new ComponentSettings();
 
             _fs_watcher = new FileSystemWatcher();
-            _fs_watcher.Changed += async (sender, args) => {
-                await Task.Delay(200);
-                _do_reload = true;
-            };
 
-            _fs_watcher.Renamed += async (sender, args) => {
+            async void handler<T>(object sender, T args)
+            {
               await Task.Delay(200);
               _do_reload = true;
             };
+
+            _fs_watcher.Changed += handler;
+            _fs_watcher.Renamed += handler;
 
             // -try- to run a little faster than 60hz
             // note: Timer isn't very reliable and quite often takes ~30ms
