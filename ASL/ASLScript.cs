@@ -25,6 +25,9 @@ namespace LiveSplit.ASL
             public ASLMethod reset = no_op;
             public ASLMethod isLoading = no_op;
             public ASLMethod gameTime = no_op;
+            public ASLMethod onStart = no_op;
+            public ASLMethod onSplit = no_op;
+            public ASLMethod onReset = no_op;
 
             public ASLMethod[] GetMethods()
             {
@@ -39,7 +42,10 @@ namespace LiveSplit.ASL
                     split,
                     reset,
                     isLoading,
-                    gameTime
+                    gameTime,
+                    onStart,
+                    onSplit,
+                    onReset
                 };
             }
 
@@ -135,16 +141,34 @@ namespace LiveSplit.ASL
         public ASLSettings RunStartup(LiveSplitState state)
         {
             Debug("Running startup");
-            RunNoProcessMethod(_methods.startup, state, true);                                                         
+            RunNoProcessMethod(_methods.startup, state, true);
+
+            if(!_methods.onStart.IsEmpty)
+                state.OnStart += RunOnStart;
+            if(!_methods.onSplit.IsEmpty)
+                state.OnSplit += RunOnSplit;
+            if(!_methods.onReset.IsEmpty)
+                state.OnReset += RunOnReset;
+
             return _settings;
         }
+
+        private void RunOnStart(object sender, EventArgs e) => RunMethod(_methods.onStart, (LiveSplitState)sender);
+        private void RunOnSplit(object sender, EventArgs e) => RunMethod(_methods.onSplit, (LiveSplitState)sender);
+        private void RunOnReset(object sender, TimerPhase e) => RunMethod(_methods.onReset, (LiveSplitState)sender);
 
         public void RunShutdown(LiveSplitState state)
         {
             Debug("Running shutdown");
             RunMethod(_methods.shutdown, state);
-        }
 
+            if(!_methods.onStart.IsEmpty)
+                state.OnStart -= RunOnStart;
+            if(!_methods.onSplit.IsEmpty)
+                state.OnSplit -= RunOnSplit;
+            if(!_methods.onReset.IsEmpty)
+                state.OnReset -= RunOnReset;
+        }
 
         private void TryConnect(LiveSplitState state)
         {
