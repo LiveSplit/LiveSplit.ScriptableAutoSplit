@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
+using System.Management;
 using LiveSplit.Model;
 using LiveSplit.Options;
 
@@ -92,6 +93,8 @@ namespace LiveSplit.ASL
 
         private Process _game;
         private TimerModel _timer;
+        private ManagementEventWatcher[] _watcher;
+        private bool _firstUpdate = true;
 
         private Dictionary<string, List<ASLState>> _states;
 
@@ -122,11 +125,19 @@ namespace LiveSplit.ASL
             {
                 if (_timer == null)
                     _timer = new TimerModel() { CurrentState = state };
-                TryConnect(state);
+
+                if (_firstUpdate)
+                    TryConnect(state);
+
+                // If the game process was not found in the first update, add a EventManagementWatcher so
+                // we will be notified directly by the OS whenever the target process becomes available
+                if (_game == null && _firstUpdate)
+                    AddWatcher(state);
             }
             else if (_game.HasExited)
             {
                 DoExit(state);
+                AddWatcher(state);
             }
             else
             {
@@ -168,6 +179,18 @@ namespace LiveSplit.ASL
                 state.OnSplit -= RunOnSplit;
             if(!_methods.onReset.IsEmpty)
                 state.OnReset -= RunOnReset;
+
+            if (_watcher != null)
+            {
+                foreach (var entry in _watcher)
+                {
+                    if (entry == null) continue;
+                    entry.Stop();
+                    entry.Dispose();
+                }
+                _watcher = null;
+            }
+
         }
 
         private void TryConnect(LiveSplitState state)
@@ -200,6 +223,39 @@ namespace LiveSplit.ASL
             }
 
             DoInit(state);
+        }
+
+        private void AddWatcher(LiveSplitState state)
+        {
+            if (_firstUpdate)
+                _firstUpdate = false;
+
+            if (_watcher != null) return;
+            _watcher = new ManagementEventWatcher[_states.Keys.Count];
+            
+            for (int i = 0; i < _states.Keys.Count; i++)
+            {
+                var processName = _states.Keys.ToArray()[i];
+                _watcher[i] = new ManagementEventWatcher(new WqlEventQuery(
+                    $"SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = '{processName}.exe'"
+                    ));
+                _watcher[i].EventArrived += (sender, e) => CallbackTryConnect(sender, e, state);
+                _watcher[i].Start();
+                Debug("Added ManagementEventWatcher for the following process: {0}", processName);
+            }
+        }
+
+        private void CallbackTryConnect(object sender, EventArgs e, LiveSplitState state)
+        {
+            for (int i = 0; i < _states.Keys.Count; i++)
+            {
+                _watcher[i].Stop();
+                _watcher[i].EventArrived -= (s, ee) => CallbackTryConnect(s, ee, state);
+                _watcher[i].Dispose();
+            }
+            _watcher = null;
+            Debug("Removed previously created ManagementEventWatchers");
+            TryConnect(state);
         }
 
         // This is executed each time after connecting to the game (usually just once,
