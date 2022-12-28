@@ -433,7 +433,11 @@ namespace LiveSplit.UI.Components
 
         private void settingsTree_BeforeCheck(object sender, TreeViewCancelEventArgs e)
         {
-            e.Cancel = e.Node.ForeColor == SystemColors.GrayText;
+            // Confirm that the user initiated the selection
+            if (e.Action != TreeViewAction.Unknown)
+            {
+                e.Cancel = e.Node.ForeColor == SystemColors.GrayText;
+            }
         }
 
         // Custom Settings Button Events
