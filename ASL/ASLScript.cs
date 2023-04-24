@@ -160,7 +160,6 @@ namespace LiveSplit.ASL
         public void RunShutdown(LiveSplitState state)
         {
             Debug("Running shutdown");
-            RunMethod(_methods.shutdown, state);
 
             if(!_methods.onStart.IsEmpty)
                 state.OnStart -= RunOnStart;
@@ -168,6 +167,8 @@ namespace LiveSplit.ASL
                 state.OnSplit -= RunOnSplit;
             if(!_methods.onReset.IsEmpty)
                 state.OnReset -= RunOnReset;
+
+            RunMethod(_methods.shutdown, state);
         }
 
         private void TryConnect(LiveSplitState state)
