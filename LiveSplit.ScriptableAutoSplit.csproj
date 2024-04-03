@@ -6,12 +6,13 @@
     <TargetFramework>net4.6.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
 
+    <EnableDynamicLoading>true</EnableDynamicLoading>
     <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LiveSplit.Core\LiveSplit.Core.csproj" />
-    <ProjectReference Include="..\..\UpdateManager\UpdateManager.csproj" />
+    <ProjectReference Include="..\..\LiveSplit.Core\LiveSplit.Core.csproj" Private="false" ExcludeAssets="runtime" />
+    <ProjectReference Include="..\..\UpdateManager\UpdateManager.csproj" Private="false" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <ItemGroup>
