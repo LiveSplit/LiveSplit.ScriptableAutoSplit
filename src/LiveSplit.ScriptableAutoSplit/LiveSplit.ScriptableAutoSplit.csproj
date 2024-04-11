@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutDir>..\..\..\..\..\bin\$(Configuration)\Components</OutDir>
+    <OutDir>..\..\..\..\bin\$(Configuration)\Components</OutDir>
     <RootNamespace>LiveSplit</RootNamespace>
     <TargetFramework>net4.6.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
@@ -11,8 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\src\LiveSplit.Core\LiveSplit.Core.csproj" Private="false" ExcludeAssets="runtime" />
-    <ProjectReference Include="..\..\..\..\..\src\UpdateManager\UpdateManager.csproj" Private="false" ExcludeAssets="runtime" />
+    <ProjectReference Include="..\..\..\..\src\LiveSplit.Core\LiveSplit.Core.csproj" Private="false" ExcludeAssets="runtime" />
+    <ProjectReference Include="..\..\..\..\src\UpdateManager\UpdateManager.csproj" Private="false" ExcludeAssets="runtime" />
   </ItemGroup>
 
   <ItemGroup>
