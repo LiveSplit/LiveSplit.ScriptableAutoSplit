@@ -1,0 +1,24 @@
+<Project>
+
+  <!-- Imports `Directory.Build.props` from the above directory, if it exists. -->
+  <!-- If it does not, the properties `LsSrcPath`, `LsLibPath`, and `ComponentsDir` must be provided via the command line. -->
+  <!-- Example: `dotnet build -p:LsSrcPath=path/to/LiveSplit/src` -->
+
+  <Import Project="..\Directory.Build.props"
+          Condition="Exists('..\Directory.Build.props')" />
+
+  <PropertyGroup Label="Project Settings">
+    <TargetFramework>net4.6.1</TargetFramework>
+
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Common Directories">
+    <RootPath>$(MSBuildThisFileDirectory)</RootPath>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Output Settings">
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+  </PropertyGroup>
+
+</Project>
