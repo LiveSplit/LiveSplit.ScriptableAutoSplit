@@ -8,7 +8,7 @@
           Condition="Exists('..\Directory.Build.props')" />
 
   <PropertyGroup Label="Project Settings">
-    <TargetFramework>net4.6.1</TargetFramework>
+    <TargetFramework>net4.8.1</TargetFramework>
 
     <Nullable>disable</Nullable>
   </PropertyGroup>
