@@ -4,7 +4,7 @@
   <!-- If it does not, the properties `LsSrcPath`, `LsLibPath`, and `ComponentsPath` must be provided via the command line. -->
   <!-- Example: `dotnet build -p:LsSrcPath=path/to/LiveSplit/src` -->
 
-  <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Build.props, $(MSBuildThisFileDirectory)\..))" />
-  <Import Project="$(MSBuildThisFileDirectory)\props\*.props" />
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Build.props, $(MSBuildThisFileDirectory)..))" />
+  <Import Project="$(MSBuildThisFileDirectory)props\*.props" />
 
 </Project>
