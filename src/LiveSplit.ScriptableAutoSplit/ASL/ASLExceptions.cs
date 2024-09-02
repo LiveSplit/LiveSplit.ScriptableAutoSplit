@@ -62,12 +62,12 @@ public class ASLRuntimeException : Exception
 
         var stack_trace = new StackTrace(inner_exception, true);
         var stack_trace_sb = new StringBuilder();
-        foreach (var frame in stack_trace.GetFrames())
+        foreach (StackFrame frame in stack_trace.GetFrames())
         {
-            var frame_method = frame.GetMethod();
-            var frame_module = frame_method.Module;
+            System.Reflection.MethodBase frame_method = frame.GetMethod();
+            System.Reflection.Module frame_module = frame_method.Module;
 
-            var frame_asl_method = method;
+            ASLMethod frame_asl_method = method;
             if (method.ScriptMethods != null)
             {
                 frame_asl_method = method.ScriptMethods.FirstOrDefault(m => frame_module == m.Module);
@@ -81,17 +81,17 @@ public class ASLRuntimeException : Exception
                 continue;
             }
 
-            var frame_line = frame.GetFileLineNumber();
+            int frame_line = frame.GetFileLineNumber();
             if (frame_line > 0)
             {
-                var line = frame_line + frame_asl_method.LineOffset;
+                int line = frame_line + frame_asl_method.LineOffset;
                 stack_trace_sb.Append($"\n   at ASL line {line} in '{frame_asl_method.Name}'");
             }
         }
 
-        var exception_name = inner_exception.GetType().FullName;
-        var method_name = method.Name ?? "(no name)";
-        var exception_message = inner_exception.Message;
+        string exception_name = inner_exception.GetType().FullName;
+        string method_name = method.Name ?? "(no name)";
+        string exception_message = inner_exception.Message;
         return $"Exception thrown: '{exception_name}' in '{method_name}' method:\n{exception_message}\n{stack_trace_sb}";
     }
 }

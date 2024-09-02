@@ -14,7 +14,7 @@ public class ASLScript
 {
     public class Methods : IEnumerable<ASLMethod>
     {
-        private static readonly ASLMethod no_op = new ASLMethod("");
+        private static readonly ASLMethod no_op = new("");
 
         public ASLMethod startup = no_op;
         public ASLMethod shutdown = no_op;
@@ -270,14 +270,14 @@ public class ASLScript
         GameVersion = string.Empty;
 
         // Fetch version from init-method
-        var ver = string.Empty;
+        string ver = string.Empty;
         RunMethod(_methods.init, state, ref ver);
 
         if (ver != GameVersion)
         {
             GameVersion = ver;
 
-            var version_state = _states.Where(kv => kv.Key.ToLower() == _game.ProcessName.ToLower())
+            ASLState version_state = _states.Where(kv => kv.Key.ToLower() == _game.ProcessName.ToLower())
                 .Select(kv => kv.Value)
                 .First() // states
                 .FirstOrDefault(s => s.GameVersion == ver);
@@ -328,13 +328,13 @@ public class ASLScript
                 _timer.InitializeGameTime();
             }
 
-            var is_paused = RunMethod(_methods.isLoading, state);
+            dynamic is_paused = RunMethod(_methods.isLoading, state);
             if (is_paused != null)
             {
                 state.IsGameTimePaused = is_paused;
             }
 
-            var game_time = RunMethod(_methods.gameTime, state);
+            dynamic game_time = RunMethod(_methods.gameTime, state);
             if (game_time != null)
             {
                 state.SetGameTime(game_time);
@@ -370,8 +370,8 @@ public class ASLScript
 
     private dynamic RunMethod(ASLMethod method, LiveSplitState state, ref string version)
     {
-        var refresh_rate = RefreshRate;
-        var result = method.Call(state, Vars, ref version, ref refresh_rate, _settings.Reader,
+        double refresh_rate = RefreshRate;
+        dynamic result = method.Call(state, Vars, ref version, ref refresh_rate, _settings.Reader,
             OldState?.Data, State?.Data, _game);
         RefreshRate = refresh_rate;
         return result;
@@ -379,15 +379,15 @@ public class ASLScript
 
     private dynamic RunMethod(ASLMethod method, LiveSplitState state)
     {
-        var version = GameVersion;
+        string version = GameVersion;
         return RunMethod(method, state, ref version);
     }
 
     // Run method without counting on being connected to the game (startup/shutdown).
     private void RunNoProcessMethod(ASLMethod method, LiveSplitState state, bool is_startup = false)
     {
-        var refresh_rate = RefreshRate;
-        var version = GameVersion;
+        double refresh_rate = RefreshRate;
+        string version = GameVersion;
         method.Call(state, Vars, ref version, ref refresh_rate,
             is_startup ? _settings.Builder : (object)_settings.Reader);
         RefreshRate = refresh_rate;

@@ -40,7 +40,7 @@ public class ASLMethod
         };
 
         using var provider = new Microsoft.CSharp.CSharpCodeProvider(options);
-        var user_code_start_marker = "// USER_CODE_START";
+        string user_code_start_marker = "// USER_CODE_START";
         string source = $@"
 using System;
 using System.Collections.Generic;
@@ -75,8 +75,8 @@ public class CompiledScript
 
         if (script_line > 0)
         {
-            var user_code_index = source.IndexOf(user_code_start_marker);
-            var compiled_code_line = source.Take(user_code_index).Count(c => c == '\n') + 2;
+            int user_code_index = source.IndexOf(user_code_start_marker);
+            int compiled_code_line = source.Take(user_code_index).Count(c => c == '\n') + 2;
             LineOffset = script_line - compiled_code_line;
         }
 
@@ -96,14 +96,14 @@ public class CompiledScript
         parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
         parameters.ReferencedAssemblies.Add("LiveSplit.Core.dll");
 
-        var res = provider.CompileAssemblyFromSource(parameters, source);
+        CompilerResults res = provider.CompileAssemblyFromSource(parameters, source);
         if (res.Errors.HasErrors)
         {
             throw new ASLCompilerException(this, res.Errors);
         }
 
         Module = res.CompiledAssembly.ManifestModule;
-        var type = res.CompiledAssembly.GetType("CompiledScript");
+        Type type = res.CompiledAssembly.GetType("CompiledScript");
         _compiled_code = Activator.CreateInstance(type);
     }
 

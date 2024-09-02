@@ -10,10 +10,10 @@ public class ASLGrammar : Grammar
     public ASLGrammar()
         : base(true)
     {
-        var string_lit = TerminalFactory.CreateCSharpString("string");
-        var number = TerminalFactory.CreateCSharpNumber("number");
+        StringLiteral string_lit = TerminalFactory.CreateCSharpString("string");
+        NumberLiteral number = TerminalFactory.CreateCSharpNumber("number");
         number.Options |= NumberOptions.AllowSign;
-        var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
+        IdentifierTerminal identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
         var code = new CustomTerminal("code", MatchCodeTerminal);
 
         var single_line_comment = new CommentTerminal("SingleLineComment", "//", "\r", "\n", "\u2085", "\u2028", "\u2029");
@@ -35,8 +35,8 @@ public class ASLGrammar : Grammar
         var onStart = new KeyTerm("onStart", "onStart");
         var onSplit = new KeyTerm("onSplit", "onSplit");
         var onReset = new KeyTerm("onReset", "onReset");
-        var comma = ToTerm(",", "comma");
-        var semi = ToTerm(";", "semi");
+        KeyTerm comma = ToTerm(",", "comma");
+        KeyTerm semi = ToTerm(";", "semi");
 
         var root = new NonTerminal("root");
         var state_def = new NonTerminal("stateDef");
@@ -73,14 +73,14 @@ public class ASLGrammar : Grammar
 
     private static Token MatchCodeTerminal(Terminal terminal, ParsingContext context, ISourceStream source)
     {
-        var remaining = source.Text.Substring(source.Location.Position);
-        var stack = 1;
-        var token = "";
+        string remaining = source.Text.Substring(source.Location.Position);
+        int stack = 1;
+        string token = "";
 
         while (stack > 0)
         {
-            var index = remaining.IndexOf('}') + 1;
-            var cut = remaining.Substring(0, index);
+            int index = remaining.IndexOf('}') + 1;
+            string cut = remaining.Substring(0, index);
 
             token += cut;
             remaining = remaining.Substring(index);

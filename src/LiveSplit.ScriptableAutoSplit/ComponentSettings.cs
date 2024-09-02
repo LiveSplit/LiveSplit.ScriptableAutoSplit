@@ -138,7 +138,7 @@ public partial class ComponentSettings : UserControl
 
         foreach (ASLSetting setting in settings.OrderedSettings)
         {
-            var value = setting.Value;
+            bool value = setting.Value;
             if (_custom_settings_state.ContainsKey(setting.Id))
             {
                 value = _custom_settings_state[setting.Id];
@@ -168,7 +168,7 @@ public partial class ComponentSettings : UserControl
         }
 
         // Gray out deactivated nodes after all have been added
-        foreach (var item in flat)
+        foreach (KeyValuePair<string, TreeNode> item in flat)
         {
             if (!item.Value.Checked)
             {
@@ -200,11 +200,11 @@ public partial class ComponentSettings : UserControl
 
     private void AppendBasicSettingsToXml(XmlDocument document, XmlNode settings_node)
     {
-        foreach (var item in _basic_settings)
+        foreach (KeyValuePair<string, CheckBox> item in _basic_settings)
         {
             if (_basic_settings_state.ContainsKey(item.Key.ToLower()))
             {
-                var value = _basic_settings_state[item.Key.ToLower()];
+                bool value = _basic_settings_state[item.Key.ToLower()];
                 settings_node.AppendChild(SettingsHelper.ToElement(document, item.Key, value));
             }
         }
@@ -214,7 +214,7 @@ public partial class ComponentSettings : UserControl
     {
         XmlElement asl_parent = document.CreateElement("CustomSettings");
 
-        foreach (var setting in _custom_settings_state)
+        foreach (KeyValuePair<string, bool> setting in _custom_settings_state)
         {
             XmlElement element = SettingsHelper.ToElement(document, "Setting", setting.Value);
             XmlAttribute id = SettingsHelper.ToAttribute(document, "id", setting.Key);
@@ -231,11 +231,11 @@ public partial class ComponentSettings : UserControl
 
     private void ParseBasicSettingsFromXml(XmlElement element)
     {
-        foreach (var item in _basic_settings)
+        foreach (KeyValuePair<string, CheckBox> item in _basic_settings)
         {
             if (element[item.Key] != null)
             {
-                var value = bool.Parse(element[item.Key].InnerText);
+                bool value = bool.Parse(element[item.Key].InnerText);
 
                 // If component is not enabled, don't check setting
                 if (item.Value.Enabled)
@@ -282,7 +282,7 @@ public partial class ComponentSettings : UserControl
 
     private void InitBasicSettings(ASLSettings settings)
     {
-        foreach (var item in _basic_settings)
+        foreach (KeyValuePair<string, CheckBox> item in _basic_settings)
         {
             string name = item.Key.ToLower();
             CheckBox checkbox = item.Value;
@@ -292,7 +292,7 @@ public partial class ComponentSettings : UserControl
                 ASLSetting setting = settings.BasicSettings[name];
                 checkbox.Enabled = true;
                 checkbox.Tag = setting;
-                var value = setting.Value;
+                bool value = setting.Value;
 
                 if (_basic_settings_state.ContainsKey(name))
                 {
@@ -454,7 +454,7 @@ public partial class ComponentSettings : UserControl
     private void settingsTree_AfterCheck(object sender, TreeViewEventArgs e)
     {
         // Update value in the ASLSetting object, which also changes it in the ASL script
-        ASLSetting setting = (ASLSetting)e.Node.Tag;
+        var setting = (ASLSetting)e.Node.Tag;
         setting.Value = e.Node.Checked;
         _custom_settings_state[setting.Id] = setting.Value;
 
@@ -563,8 +563,8 @@ internal class NewTreeView : TreeView
     {
         if (m.Msg == 0x203) // identified double click
         {
-            var local_pos = PointToClient(Cursor.Position);
-            var hit_test_info = HitTest(local_pos);
+            Point local_pos = PointToClient(Cursor.Position);
+            TreeViewHitTestInfo hit_test_info = HitTest(local_pos);
 
             if (hit_test_info.Location == TreeViewHitTestLocations.StateImage)
             {

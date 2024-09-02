@@ -15,46 +15,46 @@ public class ASLParser
     {
         var grammar = new ASLGrammar();
         var parser = new Parser(grammar);
-        var tree = parser.Parse(code);
+        ParseTree tree = parser.Parse(code);
 
         if (tree.HasErrors())
         {
             var error_msg = new StringBuilder("ASL parse error(s):");
-            foreach (var msg in parser.Context.CurrentParseTree.ParserMessages)
+            foreach (Irony.LogMessage msg in parser.Context.CurrentParseTree.ParserMessages)
             {
-                var loc = msg.Location;
+                SourceLocation loc = msg.Location;
                 error_msg.Append($"\nat Line {loc.Line + 1}, Col {loc.Column + 1}: {msg.Message}");
             }
 
             throw new Exception(error_msg.ToString());
         }
 
-        var root_childs = tree.Root.ChildNodes;
-        var methods_node = root_childs.First(x => x.Term.Name == "methodList");
-        var states_node = root_childs.First(x => x.Term.Name == "stateList");
+        ParseTreeNodeList root_childs = tree.Root.ChildNodes;
+        ParseTreeNode methods_node = root_childs.First(x => x.Term.Name == "methodList");
+        ParseTreeNode states_node = root_childs.First(x => x.Term.Name == "stateList");
 
         var states = new Dictionary<string, List<ASLState>>();
 
-        foreach (var state_node in states_node.ChildNodes)
+        foreach (ParseTreeNode state_node in states_node.ChildNodes)
         {
-            var process_name = (string)state_node.ChildNodes[2].Token.Value;
-            var version =
+            string process_name = (string)state_node.ChildNodes[2].Token.Value;
+            string version =
                 state_node.ChildNodes[3].ChildNodes.Skip(1).Select(x => (string)x.Token.Value).FirstOrDefault() ??
                 string.Empty;
-            var value_definition_nodes = state_node.ChildNodes[6].ChildNodes;
+            ParseTreeNodeList value_definition_nodes = state_node.ChildNodes[6].ChildNodes;
 
             var state = new ASLState();
 
-            foreach (var value_definition_node in value_definition_nodes.Where(x => x.ChildNodes.Count > 0))
+            foreach (ParseTreeNode value_definition_node in value_definition_nodes.Where(x => x.ChildNodes.Count > 0))
             {
-                var child_nodes = value_definition_node.ChildNodes;
-                var type = (string)child_nodes[0].Token.Value;
-                var identifier = (string)child_nodes[1].Token.Value;
-                var module =
+                ParseTreeNodeList child_nodes = value_definition_node.ChildNodes;
+                string type = (string)child_nodes[0].Token.Value;
+                string identifier = (string)child_nodes[1].Token.Value;
+                string module =
                     child_nodes[3].ChildNodes.Take(1).Select(x => (string)x.Token.Value).FirstOrDefault() ??
                     string.Empty;
-                var module_base = child_nodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
-                var offsets = child_nodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
+                int module_base = child_nodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
+                int[] offsets = child_nodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
                 var value_definition = new ASLValueDefinition()
                 {
                     Identifier = identifier,
@@ -75,11 +75,11 @@ public class ASLParser
 
         var methods = new ASLScript.Methods();
 
-        foreach (var method in methods_node.ChildNodes[0].ChildNodes)
+        foreach (ParseTreeNode method in methods_node.ChildNodes[0].ChildNodes)
         {
-            var body = (string)method.ChildNodes[2].Token.Value;
-            var method_name = (string)method.ChildNodes[0].Token.Value;
-            var line = method.ChildNodes[2].Token.Location.Line + 1;
+            string body = (string)method.ChildNodes[2].Token.Value;
+            string method_name = (string)method.ChildNodes[0].Token.Value;
+            int line = method.ChildNodes[2].Token.Location.Line + 1;
             var script = new ASLMethod(body, method_name, line)
             {
                 ScriptMethods = methods

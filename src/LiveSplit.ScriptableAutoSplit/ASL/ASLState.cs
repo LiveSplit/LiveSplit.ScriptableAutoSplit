@@ -32,9 +32,9 @@ public class ASLState : ICloneable
         var clone = (ASLState)Clone();
         var dict = (IDictionary<string, object>)Data;
 
-        foreach (var value_definition in ValueDefinitions)
+        foreach (ASLValueDefinition value_definition in ValueDefinitions)
         {
-            var value = GetValue(p, value_definition.Type, value_definition.Pointer);
+            dynamic value = GetValue(p, value_definition.Type, value_definition.Pointer);
 
             if (dict.ContainsKey(value_definition.Identifier))
             {
@@ -78,12 +78,12 @@ public class ASLState : ICloneable
             default:
                 if (type.StartsWith("string"))
                 {
-                    var length = int.Parse(type.Substring("string".Length));
+                    int length = int.Parse(type.Substring("string".Length));
                     return pointer.DerefString(p, length);
                 }
                 else if (type.StartsWith("byte"))
                 {
-                    var length = int.Parse(type.Substring("byte".Length));
+                    int length = int.Parse(type.Substring("byte".Length));
                     return pointer.DerefBytes(p, length);
                 }
 
@@ -96,7 +96,7 @@ public class ASLState : ICloneable
     public object Clone()
     {
         var clone = new ExpandoObject();
-        foreach (var pair in Data)
+        foreach (KeyValuePair<string, object> pair in Data)
         {
             ((IDictionary<string, object>)clone).Add(pair);
         }
