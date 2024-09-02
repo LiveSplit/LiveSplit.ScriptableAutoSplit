@@ -142,10 +142,7 @@ public class ASLScript
     {
         if (_game == null)
         {
-            if (_timer == null)
-            {
-                _timer = new TimerModel() { CurrentState = state };
-            }
+            _timer ??= new TimerModel() { CurrentState = state };
 
             TryConnect(state);
         }

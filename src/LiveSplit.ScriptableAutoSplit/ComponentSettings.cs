@@ -346,10 +346,7 @@ public partial class ComponentSettings : UserControl
     /// 
     private void UpdateNodesCheckedState(Func<ASLSetting, bool> func, TreeNodeCollection nodes = null)
     {
-        if (nodes == null)
-        {
-            nodes = this.treeCustomSettings.Nodes;
-        }
+        nodes ??= this.treeCustomSettings.Nodes;
 
         UpdateNodesInTree(node =>
         {

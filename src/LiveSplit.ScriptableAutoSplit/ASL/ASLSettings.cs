@@ -53,10 +53,7 @@ public class ASLSettings
 
     public void AddSetting(string name, bool default_value, string description, string parent)
     {
-        if (description == null)
-        {
-            description = name;
-        }
+        description ??= name;
 
         if (parent != null && !Settings.ContainsKey(parent))
         {
@@ -141,10 +138,7 @@ public class ASLSettingsBuilder
 
     public void Add(string id, bool default_value = true, string description = null, string parent = null)
     {
-        if (parent == null)
-        {
-            parent = CurrentDefaultParent;
-        }
+        parent ??= CurrentDefaultParent;
 
         _s.AddSetting(id, default_value, description, parent);
     }
