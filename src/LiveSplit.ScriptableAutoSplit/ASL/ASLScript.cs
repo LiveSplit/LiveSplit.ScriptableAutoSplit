@@ -321,7 +321,7 @@ public class ASLScript
             return;
         }
 
-        if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
+        if (state.CurrentPhase is TimerPhase.Running or TimerPhase.Paused)
         {
             if (_uses_game_time && !state.IsGameTimeInitialized)
             {
