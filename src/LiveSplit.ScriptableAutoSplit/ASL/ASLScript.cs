@@ -32,8 +32,8 @@ public class ASLScript
 
         public ASLMethod[] GetMethods()
         {
-            return new ASLMethod[]
-            {
+            return
+            [
                 startup,
                 shutdown,
                 init,
@@ -47,7 +47,7 @@ public class ASLScript
                 onStart,
                 onSplit,
                 onReset
-            };
+            ];
         }
 
         public IEnumerator<ASLMethod> GetEnumerator()

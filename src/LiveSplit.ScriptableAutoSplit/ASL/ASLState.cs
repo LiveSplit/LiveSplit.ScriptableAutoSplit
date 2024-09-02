@@ -23,7 +23,7 @@ public class ASLState : ICloneable
     public ASLState()
     {
         Data = new ExpandoObject();
-        ValueDefinitions = new List<ASLValueDefinition>();
+        ValueDefinitions = [];
         GameVersion = string.Empty;
     }
 

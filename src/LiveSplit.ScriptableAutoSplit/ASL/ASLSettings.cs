@@ -44,9 +44,9 @@ public class ASLSettings
 
     public ASLSettings()
     {
-        Settings = new Dictionary<string, ASLSetting>();
-        OrderedSettings = new List<ASLSetting>();
-        BasicSettings = new Dictionary<string, ASLSetting>();
+        Settings = [];
+        OrderedSettings = [];
+        BasicSettings = [];
         Builder = new ASLSettingsBuilder(this);
         Reader = new ASLSettingsReader(this);
     }

@@ -57,8 +57,8 @@ public partial class ComponentSettings : UserControl
             ["Split"] = checkboxSplit
         };
 
-        _basic_settings_state = new Dictionary<string, bool>();
-        _custom_settings_state = new Dictionary<string, bool>();
+        _basic_settings_state = [];
+        _custom_settings_state = [];
     }
 
     public ComponentSettings(string scriptPath)
