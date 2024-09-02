@@ -395,8 +395,8 @@ public class ASLScript
 
     private void Debug(string output, params object[] args)
     {
-        Log.Info(String.Format("[ASL/{1}] {0}",
-            String.Format(output, args),
+        Log.Info(string.Format("[ASL/{1}] {0}",
+            string.Format(output, args),
             this.GetHashCode()));
     }
 }
