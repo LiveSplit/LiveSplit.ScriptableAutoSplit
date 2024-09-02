@@ -78,12 +78,12 @@ public class ASLState : ICloneable
             default:
                 if (type.StartsWith("string"))
                 {
-                    int length = int.Parse(type.Substring("string".Length));
+                    int length = int.Parse(type["string".Length..]);
                     return pointer.DerefString(p, length);
                 }
                 else if (type.StartsWith("byte"))
                 {
-                    int length = int.Parse(type.Substring("byte".Length));
+                    int length = int.Parse(type["byte".Length..]);
                     return pointer.DerefBytes(p, length);
                 }
 

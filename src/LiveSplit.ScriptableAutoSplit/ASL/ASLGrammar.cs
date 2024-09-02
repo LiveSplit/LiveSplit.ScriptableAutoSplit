@@ -73,22 +73,22 @@ public class ASLGrammar : Grammar
 
     private static Token MatchCodeTerminal(Terminal terminal, ParsingContext context, ISourceStream source)
     {
-        string remaining = source.Text.Substring(source.Location.Position);
+        string remaining = source.Text[source.Location.Position..];
         int stack = 1;
         string token = "";
 
         while (stack > 0)
         {
             int index = remaining.IndexOf('}') + 1;
-            string cut = remaining.Substring(0, index);
+            string cut = remaining[..index];
 
             token += cut;
-            remaining = remaining.Substring(index);
+            remaining = remaining[index..];
             stack += cut.Count(x => x == '{');
             stack--;
         }
 
-        token = token.Substring(0, token.Length - 1);
+        token = token[..^1];
         source.PreviewPosition += token.Length;
 
         return source.CreateToken(terminal.OutputTerminal);
