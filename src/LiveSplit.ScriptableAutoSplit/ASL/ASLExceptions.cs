@@ -19,7 +19,7 @@ public class ASLCompilerException : Exception
         CompilerErrors = errors;
     }
 
-    static string GetMessage(ASLMethod method, CompilerErrorCollection errors)
+    private static string GetMessage(ASLMethod method, CompilerErrorCollection errors)
     {
         if (method == null)
             throw new ArgumentNullException(nameof(method));
@@ -42,7 +42,7 @@ public class ASLRuntimeException : Exception
         : base(GetMessage(method, inner_exception), inner_exception)
     { }
 
-    static string GetMessage(ASLMethod method, Exception inner_exception)
+    private static string GetMessage(ASLMethod method, Exception inner_exception)
     {
         if (method == null)
             throw new ArgumentNullException(nameof(method));

@@ -22,12 +22,12 @@ public class ASLComponent : LogicComponent
     private bool _do_reload;
     private string _old_script_path;
 
-    private Timer _update_timer;
-    private FileSystemWatcher _fs_watcher;
+    private readonly Timer _update_timer;
+    private readonly FileSystemWatcher _fs_watcher;
 
-    private ComponentSettings _settings;
+    private readonly ComponentSettings _settings;
 
-    private LiveSplitState _state;
+    private readonly LiveSplitState _state;
 
     public ASLComponent(LiveSplitState state)
     {

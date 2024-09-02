@@ -22,7 +22,7 @@ public class ASLMethod
 
     public Module Module { get; }
 
-    private dynamic _compiled_code;
+    private readonly dynamic _compiled_code;
 
     public ASLMethod(string code, string name = null, int script_line = 0)
     {

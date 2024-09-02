@@ -14,7 +14,7 @@ public class ASLScript
 {
     public class Methods : IEnumerable<ASLMethod>
     {
-        private static ASLMethod no_op = new ASLMethod("");
+        private static readonly ASLMethod no_op = new ASLMethod("");
 
         public ASLMethod startup = no_op;
         public ASLMethod shutdown = no_op;
@@ -86,17 +86,17 @@ public class ASLScript
     public ASLState OldState { get; private set; }
     public ExpandoObject Vars { get; }
 
-    private bool _uses_game_time;
+    private readonly bool _uses_game_time;
     private bool _init_completed;
 
-    private ASLSettings _settings;
+    private readonly ASLSettings _settings;
 
     private Process _game;
     private TimerModel _timer;
 
-    private Dictionary<string, List<ASLState>> _states;
+    private readonly Dictionary<string, List<ASLState>> _states;
 
-    private Methods _methods;
+    private readonly Methods _methods;
 
     public ASLScript(Methods methods, Dictionary<string, List<ASLState>> states)
     {

@@ -16,7 +16,7 @@ public partial class ComponentSettings : UserControl
     // if true, next path loaded from settings will be ignored
     private bool _ignore_next_path_setting;
 
-    private Dictionary<string, CheckBox> _basic_settings;
+    private readonly Dictionary<string, CheckBox> _basic_settings;
 
     // Save the state of settings independant of actual ASLSetting objects
     // or the actual GUI components (checkboxes). This is used to restore
@@ -32,7 +32,7 @@ public partial class ComponentSettings : UserControl
     // if no script is currently loaded.
 
     // Start/Reset/Split checkboxes
-    private Dictionary<string, bool> _basic_settings_state;
+    private readonly Dictionary<string, bool> _basic_settings_state;
 
     // Custom settings
     private Dictionary<string, bool> _custom_settings_state;
@@ -535,7 +535,7 @@ public partial class ComponentSettings : UserControl
 /// See also:
 /// http://stackoverflow.com/questions/17356976/treeview-with-checkboxes-not-processing-clicks-correctly
 /// http://stackoverflow.com/questions/14647216/c-sharp-treeview-ignore-double-click-only-at-checkbox
-class NewTreeView : TreeView
+internal class NewTreeView : TreeView
 {
     protected override void WndProc(ref Message m)
     {

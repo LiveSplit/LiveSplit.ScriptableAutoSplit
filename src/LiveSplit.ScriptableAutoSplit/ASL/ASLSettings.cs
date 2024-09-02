@@ -117,7 +117,7 @@ public class ASLSettings
 public class ASLSettingsBuilder
 {
     public string CurrentDefaultParent { get; set; }
-    private ASLSettings _s;
+    private readonly ASLSettings _s;
 
     public ASLSettingsBuilder(ASLSettings s)
     {
@@ -146,7 +146,7 @@ public class ASLSettingsBuilder
 /// </summary>
 public class ASLSettingsReader
 {
-    private ASLSettings _s;
+    private readonly ASLSettings _s;
 
     public ASLSettingsReader(ASLSettings s)
     {
