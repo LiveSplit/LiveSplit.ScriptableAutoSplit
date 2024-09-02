@@ -43,7 +43,7 @@ public partial class ComponentSettings : UserControl
 
         ScriptPath = string.Empty;
 
-        this.txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false,
+        txtScriptPath.DataBindings.Add("Text", this, "ScriptPath", false,
             DataSourceUpdateMode.OnPropertyChanged);
 
         SetGameVersion(null);
@@ -100,7 +100,7 @@ public partial class ComponentSettings : UserControl
 
     public void SetGameVersion(string version)
     {
-        this.lblGameVersion.Text = string.IsNullOrEmpty(version) ? "" : "Game Version: " + version;
+        lblGameVersion.Text = string.IsNullOrEmpty(version) ? "" : "Game Version: " + version;
     }
 
     /// <summary>
@@ -128,8 +128,8 @@ public partial class ComponentSettings : UserControl
             _custom_settings_state.Clear();
         }
 
-        this.treeCustomSettings.BeginUpdate();
-        this.treeCustomSettings.Nodes.Clear();
+        treeCustomSettings.BeginUpdate();
+        treeCustomSettings.Nodes.Clear();
 
         var values = new Dictionary<string, bool>();
 
@@ -148,19 +148,19 @@ public partial class ComponentSettings : UserControl
             {
                 Tag = setting,
                 Checked = value,
-                ContextMenuStrip = this.treeContextMenu2,
+                ContextMenuStrip = treeContextMenu2,
                 ToolTipText = setting.ToolTip
             };
             setting.Value = value;
 
             if (setting.Parent == null)
             {
-                this.treeCustomSettings.Nodes.Add(node);
+                treeCustomSettings.Nodes.Add(node);
             }
             else if (flat.ContainsKey(setting.Parent))
             {
                 flat[setting.Parent].Nodes.Add(node);
-                flat[setting.Parent].ContextMenuStrip = this.treeContextMenu;
+                flat[setting.Parent].ContextMenuStrip = treeContextMenu;
             }
 
             flat.Add(setting.Id, node);
@@ -189,9 +189,9 @@ public partial class ComponentSettings : UserControl
         treeCustomSettings.EndUpdate();
 
         // Scroll up to the top
-        if (this.treeCustomSettings.Nodes.Count > 0)
+        if (treeCustomSettings.Nodes.Count > 0)
         {
-            this.treeCustomSettings.Nodes[0].EnsureVisible();
+            treeCustomSettings.Nodes[0].EnsureVisible();
         }
 
         UpdateCustomSettingsVisibility();
@@ -313,12 +313,12 @@ public partial class ComponentSettings : UserControl
 
     private void UpdateCustomSettingsVisibility()
     {
-        bool show = this.treeCustomSettings.GetNodeCount(false) > 0;
-        this.treeCustomSettings.Visible = show;
-        this.btnResetToDefault.Visible = show;
-        this.btnCheckAll.Visible = show;
-        this.btnUncheckAll.Visible = show;
-        this.labelCustomSettings.Visible = show;
+        bool show = treeCustomSettings.GetNodeCount(false) > 0;
+        treeCustomSettings.Visible = show;
+        btnResetToDefault.Visible = show;
+        btnCheckAll.Visible = show;
+        btnUncheckAll.Visible = show;
+        labelCustomSettings.Visible = show;
     }
 
     /// <summary>
@@ -346,7 +346,7 @@ public partial class ComponentSettings : UserControl
     /// 
     private void UpdateNodesCheckedState(Func<ASLSetting, bool> func, TreeNodeCollection nodes = null)
     {
-        nodes ??= this.treeCustomSettings.Nodes;
+        nodes ??= treeCustomSettings.Nodes;
 
         UpdateNodesInTree(node =>
         {
@@ -430,7 +430,7 @@ public partial class ComponentSettings : UserControl
 
         if (dialog.ShowDialog() == DialogResult.OK)
         {
-            ScriptPath = this.txtScriptPath.Text = dialog.FileName;
+            ScriptPath = txtScriptPath.Text = dialog.FileName;
         }
     }
 
@@ -492,61 +492,61 @@ public partial class ComponentSettings : UserControl
     private void settingsTree_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
     {
         // Select clicked node (not only with left-click) for use with context menu
-        this.treeCustomSettings.SelectedNode = e.Node;
+        treeCustomSettings.SelectedNode = e.Node;
     }
 
     private void cmiCheckBranch_Click(object sender, EventArgs e)
     {
-        UpdateNodesCheckedState(s => true, this.treeCustomSettings.SelectedNode.Nodes);
-        UpdateNodeCheckedState(s => true, this.treeCustomSettings.SelectedNode);
+        UpdateNodesCheckedState(s => true, treeCustomSettings.SelectedNode.Nodes);
+        UpdateNodeCheckedState(s => true, treeCustomSettings.SelectedNode);
     }
 
     private void cmiUncheckBranch_Click(object sender, EventArgs e)
     {
-        UpdateNodesCheckedState(s => false, this.treeCustomSettings.SelectedNode.Nodes);
-        UpdateNodeCheckedState(s => false, this.treeCustomSettings.SelectedNode);
+        UpdateNodesCheckedState(s => false, treeCustomSettings.SelectedNode.Nodes);
+        UpdateNodeCheckedState(s => false, treeCustomSettings.SelectedNode);
     }
 
     private void cmiResetBranchToDefault_Click(object sender, EventArgs e)
     {
-        UpdateNodesCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode.Nodes);
-        UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);
+        UpdateNodesCheckedState(s => s.DefaultValue, treeCustomSettings.SelectedNode.Nodes);
+        UpdateNodeCheckedState(s => s.DefaultValue, treeCustomSettings.SelectedNode);
     }
 
     private void cmiExpandBranch_Click(object sender, EventArgs e)
     {
-        this.treeCustomSettings.SelectedNode.ExpandAll();
-        this.treeCustomSettings.SelectedNode.EnsureVisible();
+        treeCustomSettings.SelectedNode.ExpandAll();
+        treeCustomSettings.SelectedNode.EnsureVisible();
     }
 
     private void cmiCollapseBranch_Click(object sender, EventArgs e)
     {
-        this.treeCustomSettings.SelectedNode.Collapse();
-        this.treeCustomSettings.SelectedNode.EnsureVisible();
+        treeCustomSettings.SelectedNode.Collapse();
+        treeCustomSettings.SelectedNode.EnsureVisible();
     }
 
     private void cmiCollapseTreeToSelection_Click(object sender, EventArgs e)
     {
-        TreeNode selected = this.treeCustomSettings.SelectedNode;
-        this.treeCustomSettings.CollapseAll();
-        this.treeCustomSettings.SelectedNode = selected;
+        TreeNode selected = treeCustomSettings.SelectedNode;
+        treeCustomSettings.CollapseAll();
+        treeCustomSettings.SelectedNode = selected;
         selected.EnsureVisible();
     }
 
     private void cmiExpandTree_Click(object sender, EventArgs e)
     {
-        this.treeCustomSettings.ExpandAll();
-        this.treeCustomSettings.SelectedNode.EnsureVisible();
+        treeCustomSettings.ExpandAll();
+        treeCustomSettings.SelectedNode.EnsureVisible();
     }
 
     private void cmiCollapseTree_Click(object sender, EventArgs e)
     {
-        this.treeCustomSettings.CollapseAll();
+        treeCustomSettings.CollapseAll();
     }
 
     private void cmiResetSettingToDefault_Click(object sender, EventArgs e)
     {
-        UpdateNodeCheckedState(s => s.DefaultValue, this.treeCustomSettings.SelectedNode);
+        UpdateNodeCheckedState(s => s.DefaultValue, treeCustomSettings.SelectedNode);
     }
 }
 

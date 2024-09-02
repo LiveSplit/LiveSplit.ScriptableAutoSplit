@@ -397,6 +397,6 @@ public class ASLScript
     {
         Log.Info(string.Format("[ASL/{1}] {0}",
             string.Format(output, args),
-            this.GetHashCode()));
+            GetHashCode()));
     }
 }
