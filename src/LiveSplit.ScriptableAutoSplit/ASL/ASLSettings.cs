@@ -153,28 +153,16 @@ public class ASLSettingsReader
         _s = s;
     }
 
-    public dynamic this[string id]
-    {
-        get { return _s.GetSettingValue(id); }
-    }
+    public dynamic this[string id] => _s.GetSettingValue(id);
 
     public bool ContainsKey(string key)
     {
         return _s.Settings.ContainsKey(key);
     }
 
-    public bool StartEnabled
-    {
-        get { return _s.GetBasicSettingValue("start"); }
-    }
+    public bool StartEnabled => _s.GetBasicSettingValue("start");
 
-    public bool ResetEnabled
-    {
-        get { return _s.GetBasicSettingValue("reset"); }
-    }
+    public bool ResetEnabled => _s.GetBasicSettingValue("reset");
 
-    public bool SplitEnabled
-    {
-        get { return _s.GetBasicSettingValue("split"); }
-    }
+    public bool SplitEnabled => _s.GetBasicSettingValue("split");
 }

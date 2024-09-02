@@ -50,8 +50,15 @@ public class ASLScript
             };
         }
 
-        public IEnumerator<ASLMethod> GetEnumerator() => ((IEnumerable<ASLMethod>)GetMethods()).GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetMethods().GetEnumerator();
+        public IEnumerator<ASLMethod> GetEnumerator()
+        {
+            return ((IEnumerable<ASLMethod>)GetMethods()).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetMethods().GetEnumerator();
+        }
     }
 
     public event EventHandler<double> RefreshRateChanged;
@@ -60,7 +67,7 @@ public class ASLScript
     private string _game_version = string.Empty;
     public string GameVersion
     {
-        get { return _game_version; }
+        get => _game_version;
         set
         {
             if (value != _game_version)
@@ -72,7 +79,7 @@ public class ASLScript
     private double _refresh_rate = 1000 / 15d;
     public double RefreshRate // per sec
     {
-        get { return _refresh_rate; }
+        get => _refresh_rate;
         set
         {
             if (Math.Abs(value - _refresh_rate) > 0.01)
@@ -154,9 +161,20 @@ public class ASLScript
         return _settings;
     }
 
-    private void RunOnStart(object sender, EventArgs e) => RunMethod(_methods.onStart, (LiveSplitState)sender);
-    private void RunOnSplit(object sender, EventArgs e) => RunMethod(_methods.onSplit, (LiveSplitState)sender);
-    private void RunOnReset(object sender, TimerPhase e) => RunMethod(_methods.onReset, (LiveSplitState)sender);
+    private void RunOnStart(object sender, EventArgs e)
+    {
+        RunMethod(_methods.onStart, (LiveSplitState)sender);
+    }
+
+    private void RunOnSplit(object sender, EventArgs e)
+    {
+        RunMethod(_methods.onSplit, (LiveSplitState)sender);
+    }
+
+    private void RunOnReset(object sender, TimerPhase e)
+    {
+        RunMethod(_methods.onReset, (LiveSplitState)sender);
+    }
 
     public void RunShutdown(LiveSplitState state)
     {
