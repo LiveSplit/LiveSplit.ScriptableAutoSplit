@@ -39,10 +39,9 @@ public class ASLMethod
             { "CompilerVersion", "v4.0" }
         };
 
-        using (var provider = new Microsoft.CSharp.CSharpCodeProvider(options))
-        {
-            var user_code_start_marker = "// USER_CODE_START";
-            string source = $@"
+        using var provider = new Microsoft.CSharp.CSharpCodeProvider(options);
+        var user_code_start_marker = "// USER_CODE_START";
+        string source = $@"
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -74,39 +73,38 @@ public class CompiledScript
     }}
 }}";
 
-            if (script_line > 0)
-            {
-                var user_code_index = source.IndexOf(user_code_start_marker);
-                var compiled_code_line = source.Take(user_code_index).Count(c => c == '\n') + 2;
-                LineOffset = script_line - compiled_code_line;
-            }
-
-            var parameters = new CompilerParameters()
-            {
-                GenerateInMemory = true,
-                CompilerOptions = "/optimize /d:TRACE /debug:pdbonly",
-            };
-            parameters.ReferencedAssemblies.Add("System.dll");
-            parameters.ReferencedAssemblies.Add("System.Core.dll");
-            parameters.ReferencedAssemblies.Add("System.Data.dll");
-            parameters.ReferencedAssemblies.Add("System.Data.DataSetExtensions.dll");
-            parameters.ReferencedAssemblies.Add("System.Drawing.dll");
-            parameters.ReferencedAssemblies.Add("System.Windows.Forms.dll");
-            parameters.ReferencedAssemblies.Add("System.Xml.dll");
-            parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
-            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
-            parameters.ReferencedAssemblies.Add("LiveSplit.Core.dll");
-
-            var res = provider.CompileAssemblyFromSource(parameters, source);
-            if (res.Errors.HasErrors)
-            {
-                throw new ASLCompilerException(this, res.Errors);
-            }
-
-            Module = res.CompiledAssembly.ManifestModule;
-            var type = res.CompiledAssembly.GetType("CompiledScript");
-            _compiled_code = Activator.CreateInstance(type);
+        if (script_line > 0)
+        {
+            var user_code_index = source.IndexOf(user_code_start_marker);
+            var compiled_code_line = source.Take(user_code_index).Count(c => c == '\n') + 2;
+            LineOffset = script_line - compiled_code_line;
         }
+
+        var parameters = new CompilerParameters()
+        {
+            GenerateInMemory = true,
+            CompilerOptions = "/optimize /d:TRACE /debug:pdbonly",
+        };
+        parameters.ReferencedAssemblies.Add("System.dll");
+        parameters.ReferencedAssemblies.Add("System.Core.dll");
+        parameters.ReferencedAssemblies.Add("System.Data.dll");
+        parameters.ReferencedAssemblies.Add("System.Data.DataSetExtensions.dll");
+        parameters.ReferencedAssemblies.Add("System.Drawing.dll");
+        parameters.ReferencedAssemblies.Add("System.Windows.Forms.dll");
+        parameters.ReferencedAssemblies.Add("System.Xml.dll");
+        parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
+        parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
+        parameters.ReferencedAssemblies.Add("LiveSplit.Core.dll");
+
+        var res = provider.CompileAssemblyFromSource(parameters, source);
+        if (res.Errors.HasErrors)
+        {
+            throw new ASLCompilerException(this, res.Errors);
+        }
+
+        Module = res.CompiledAssembly.ManifestModule;
+        var type = res.CompiledAssembly.GetType("CompiledScript");
+        _compiled_code = Activator.CreateInstance(type);
     }
 
     public dynamic Call(LiveSplitState timer, ExpandoObject vars, ref string version, ref double refreshRate,
