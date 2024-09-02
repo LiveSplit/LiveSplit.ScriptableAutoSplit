@@ -34,7 +34,7 @@ public class ASLCompilerException : Exception
         var sb = new StringBuilder($"'{method.Name ?? "(no name)"}' method compilation errors:");
         foreach (CompilerError error in errors)
         {
-            error.Line = error.Line + method.LineOffset;
+            error.Line += method.LineOffset;
             sb.Append($"\nLine {error.Line}, Col {error.Column}: {(error.IsWarning ? "warning" : "error")} {error.ErrorNumber}: {error.ErrorText}");
         }
 
