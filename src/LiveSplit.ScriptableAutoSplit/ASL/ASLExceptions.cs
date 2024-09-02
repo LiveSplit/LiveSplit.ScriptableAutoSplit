@@ -92,6 +92,6 @@ public class ASLRuntimeException : Exception
         var exception_name = inner_exception.GetType().FullName;
         var method_name = method.Name ?? "(no name)";
         var exception_message = inner_exception.Message;
-        return $"Exception thrown: '{exception_name}' in '{method_name}' method:\n{exception_message}\n{stack_trace_sb.ToString()}";
+        return $"Exception thrown: '{exception_name}' in '{method_name}' method:\n{exception_message}\n{stack_trace_sb}";
     }
 }
