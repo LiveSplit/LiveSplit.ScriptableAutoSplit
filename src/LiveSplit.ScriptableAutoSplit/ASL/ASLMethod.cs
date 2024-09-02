@@ -27,7 +27,9 @@ public class ASLMethod
     public ASLMethod(string code, string name = null, int script_line = 0)
     {
         if (code == null)
+        {
             throw new ArgumentNullException(nameof(code));
+        }
 
         Name = name;
         IsEmpty = string.IsNullOrWhiteSpace(code);
@@ -97,7 +99,9 @@ public class CompiledScript
 
             var res = provider.CompileAssemblyFromSource(parameters, source);
             if (res.Errors.HasErrors)
+            {
                 throw new ASLCompilerException(this, res.Errors);
+            }
 
             Module = res.CompiledAssembly.ManifestModule;
             var type = res.CompiledAssembly.GetType("CompiledScript");
@@ -120,6 +124,7 @@ public class CompiledScript
         {
             throw new ASLRuntimeException(this, ex);
         }
+
         version = _compiled_code.version;
         refreshRate = _compiled_code.refreshRate;
         return ret;

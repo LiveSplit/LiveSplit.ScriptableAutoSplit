@@ -37,7 +37,6 @@ public partial class ComponentSettings : UserControl
     // Custom settings
     private Dictionary<string, bool> _custom_settings_state;
 
-
     public ComponentSettings()
     {
         InitializeComponent();
@@ -89,7 +88,10 @@ public partial class ComponentSettings : UserControl
         if (!element.IsEmpty)
         {
             if (!_ignore_next_path_setting)
+            {
                 ScriptPath = SettingsHelper.ParseString(element["ScriptPath"], string.Empty);
+            }
+
             _ignore_next_path_setting = false;
             ParseBasicSettingsFromXml(element);
             ParseCustomSettingsFromXml(element);
@@ -138,7 +140,9 @@ public partial class ComponentSettings : UserControl
         {
             var value = setting.Value;
             if (_custom_settings_state.ContainsKey(setting.Id))
+            {
                 value = _custom_settings_state[setting.Id];
+            }
 
             var node = new TreeNode(setting.Label)
             {
@@ -177,19 +181,22 @@ public partial class ComponentSettings : UserControl
         // be empty because the script failed to load, which can happen frequently when working
         // on ASL scripts)
         if (script_loaded)
+        {
             _custom_settings_state = values;
+        }
 
         treeCustomSettings.ExpandAll();
         treeCustomSettings.EndUpdate();
 
         // Scroll up to the top
         if (this.treeCustomSettings.Nodes.Count > 0)
+        {
             this.treeCustomSettings.Nodes[0].EnsureVisible();
+        }
 
         UpdateCustomSettingsVisibility();
         InitBasicSettings(settings);
     }
-
 
     private void AppendBasicSettingsToXml(XmlDocument document, XmlNode settings_node)
     {
@@ -232,7 +239,9 @@ public partial class ComponentSettings : UserControl
 
                 // If component is not enabled, don't check setting
                 if (item.Value.Enabled)
+                {
                     item.Value.Checked = value;
+                }
 
                 _basic_settings_state[item.Key.ToLower()] = value;
             }
@@ -252,7 +261,9 @@ public partial class ComponentSettings : UserControl
             foreach (XmlElement element in custom_settings_node.ChildNodes)
             {
                 if (element.Name != "Setting")
+                {
                     continue;
+                }
 
                 string id = element.Attributes["id"].Value;
                 string type = element.Attributes["type"].Value;
@@ -284,7 +295,9 @@ public partial class ComponentSettings : UserControl
                 var value = setting.Value;
 
                 if (_basic_settings_state.ContainsKey(name))
+                {
                     value = _basic_settings_state[name];
+                }
 
                 checkbox.Checked = value;
                 setting.Value = value;
@@ -319,7 +332,9 @@ public partial class ComponentSettings : UserControl
         {
             bool include_child_nodes = func(node);
             if (include_child_nodes)
+            {
                 UpdateNodesInTree(func, node.Nodes);
+            }
         }
     }
 
@@ -332,7 +347,9 @@ public partial class ComponentSettings : UserControl
     private void UpdateNodesCheckedState(Func<ASLSetting, bool> func, TreeNodeCollection nodes = null)
     {
         if (nodes == null)
+        {
             nodes = this.treeCustomSettings.Nodes;
+        }
 
         UpdateNodesInTree(node =>
         {
@@ -340,7 +357,9 @@ public partial class ComponentSettings : UserControl
             bool check = func(setting);
 
             if (node.Checked != check)
+            {
                 node.Checked = check;
+            }
 
             return true;
         }, nodes);
@@ -354,14 +373,18 @@ public partial class ComponentSettings : UserControl
     private void UpdateNodesCheckedState(Dictionary<string, bool> setting_values, TreeNodeCollection nodes = null)
     {
         if (setting_values == null)
+        {
             return;
+        }
 
         UpdateNodesCheckedState(setting =>
         {
             string id = setting.Id;
 
             if (setting_values.ContainsKey(id))
+            {
                 return setting_values[id];
+            }
 
             return setting.Value;
         }, nodes);
@@ -373,7 +396,9 @@ public partial class ComponentSettings : UserControl
         bool check = func(setting);
 
         if (node.Checked != check)
+        {
             node.Checked = check;
+        }
     }
 
     /// <summary>
@@ -392,7 +417,6 @@ public partial class ComponentSettings : UserControl
         }
     }
 
-
     // Events
 
     private void btnSelectFile_Click(object sender, EventArgs e)
@@ -408,7 +432,9 @@ public partial class ComponentSettings : UserControl
         }
 
         if (dialog.ShowDialog() == DialogResult.OK)
+        {
             ScriptPath = this.txtScriptPath.Text = dialog.FileName;
+        }
     }
 
     // Basic Setting checked/unchecked
@@ -463,7 +489,6 @@ public partial class ComponentSettings : UserControl
     {
         UpdateNodesCheckedState(s => s.DefaultValue);
     }
-
 
     // Custom Settings Context Menu Events
 

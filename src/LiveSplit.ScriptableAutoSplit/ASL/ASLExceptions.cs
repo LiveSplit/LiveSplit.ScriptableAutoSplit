@@ -22,9 +22,14 @@ public class ASLCompilerException : Exception
     private static string GetMessage(ASLMethod method, CompilerErrorCollection errors)
     {
         if (method == null)
+        {
             throw new ArgumentNullException(nameof(method));
+        }
+
         if (errors == null)
+        {
             throw new ArgumentNullException(nameof(errors));
+        }
 
         var sb = new StringBuilder($"'{method.Name ?? "(no name)"}' method compilation errors:");
         foreach (CompilerError error in errors)
@@ -32,6 +37,7 @@ public class ASLCompilerException : Exception
             error.Line = error.Line + method.LineOffset;
             sb.Append($"\nLine {error.Line}, Col {error.Column}: {(error.IsWarning ? "warning" : "error")} {error.ErrorNumber}: {error.ErrorText}");
         }
+
         return sb.ToString();
     }
 }
@@ -45,9 +51,14 @@ public class ASLRuntimeException : Exception
     private static string GetMessage(ASLMethod method, Exception inner_exception)
     {
         if (method == null)
+        {
             throw new ArgumentNullException(nameof(method));
+        }
+
         if (inner_exception == null)
+        {
             throw new ArgumentNullException(nameof(inner_exception));
+        }
 
         var stack_trace = new StackTrace(inner_exception, true);
         var stack_trace_sb = new StringBuilder();
@@ -61,10 +72,14 @@ public class ASLRuntimeException : Exception
             {
                 frame_asl_method = method.ScriptMethods.FirstOrDefault(m => frame_module == m.Module);
                 if (frame_asl_method == null)
+                {
                     continue;
+                }
             }
             else if (frame_module != method.Module)
+            {
                 continue;
+            }
 
             var frame_line = frame.GetFileLineNumber();
             if (frame_line > 0)

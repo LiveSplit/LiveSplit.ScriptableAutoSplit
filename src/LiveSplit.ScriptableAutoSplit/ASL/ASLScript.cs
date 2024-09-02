@@ -71,7 +71,10 @@ public class ASLScript
         set
         {
             if (value != _game_version)
+            {
                 GameVersionChanged?.Invoke(this, value);
+            }
+
             _game_version = value;
         }
     }
@@ -83,7 +86,10 @@ public class ASLScript
         set
         {
             if (Math.Abs(value - _refresh_rate) > 0.01)
+            {
                 RefreshRateChanged?.Invoke(this, value);
+            }
+
             _refresh_rate = value;
         }
     }
@@ -114,11 +120,19 @@ public class ASLScript
         Vars = new ExpandoObject();
 
         if (!_methods.start.IsEmpty)
+        {
             _settings.AddBasicSetting("start");
+        }
+
         if (!_methods.split.IsEmpty)
+        {
             _settings.AddBasicSetting("split");
+        }
+
         if (!_methods.reset.IsEmpty)
+        {
             _settings.AddBasicSetting("reset");
+        }
 
         _uses_game_time = !_methods.isLoading.IsEmpty || !_methods.gameTime.IsEmpty;
     }
@@ -129,7 +143,10 @@ public class ASLScript
         if (_game == null)
         {
             if (_timer == null)
+            {
                 _timer = new TimerModel() { CurrentState = state };
+            }
+
             TryConnect(state);
         }
         else if (_game.HasExited)
@@ -139,9 +156,13 @@ public class ASLScript
         else
         {
             if (!_init_completed)
+            {
                 DoInit(state);
+            }
             else
+            {
                 DoUpdate(state);
+            }
         }
     }
 
@@ -152,11 +173,19 @@ public class ASLScript
         RunNoProcessMethod(_methods.startup, state, true);
 
         if (!_methods.onStart.IsEmpty)
+        {
             state.OnStart += RunOnStart;
+        }
+
         if (!_methods.onSplit.IsEmpty)
+        {
             state.OnSplit += RunOnSplit;
+        }
+
         if (!_methods.onReset.IsEmpty)
+        {
             state.OnReset += RunOnReset;
+        }
 
         return _settings;
     }
@@ -181,11 +210,19 @@ public class ASLScript
         Debug("Running shutdown");
 
         if (!_methods.onStart.IsEmpty)
+        {
             state.OnStart -= RunOnStart;
+        }
+
         if (!_methods.onSplit.IsEmpty)
+        {
             state.OnSplit -= RunOnSplit;
+        }
+
         if (!_methods.onReset.IsEmpty)
+        {
             state.OnReset -= RunOnReset;
+        }
 
         RunMethod(_methods.shutdown, state);
     }
@@ -203,7 +240,9 @@ public class ASLScript
         }).FirstOrDefault(x => x.Process != null);
 
         if (state_process == null)
+        {
             return;
+        }
 
         _init_completed = false;
         _game = state_process.Process;
@@ -288,25 +327,35 @@ public class ASLScript
         if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
         {
             if (_uses_game_time && !state.IsGameTimeInitialized)
+            {
                 _timer.InitializeGameTime();
+            }
 
             var is_paused = RunMethod(_methods.isLoading, state);
             if (is_paused != null)
+            {
                 state.IsGameTimePaused = is_paused;
+            }
 
             var game_time = RunMethod(_methods.gameTime, state);
             if (game_time != null)
+            {
                 state.SetGameTime(game_time);
+            }
 
             if (RunMethod(_methods.reset, state) ?? false)
             {
                 if (_settings.GetBasicSettingValue("reset"))
+                {
                     _timer.Reset();
+                }
             }
             else if (RunMethod(_methods.split, state) ?? false)
             {
                 if (_settings.GetBasicSettingValue("split"))
+                {
                     _timer.Split();
+                }
             }
         }
 
@@ -315,7 +364,9 @@ public class ASLScript
             if (RunMethod(_methods.start, state) ?? false)
             {
                 if (_settings.GetBasicSettingValue("start"))
+                {
                     _timer.Start();
+                }
             }
         }
     }

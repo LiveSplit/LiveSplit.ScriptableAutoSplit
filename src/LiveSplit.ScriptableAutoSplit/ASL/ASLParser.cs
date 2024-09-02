@@ -66,7 +66,10 @@ public class ASLParser
 
             state.GameVersion = version;
             if (!states.ContainsKey(process_name))
+            {
                 states.Add(process_name, new List<ASLState>());
+            }
+
             states[process_name].Add(state);
         }
 

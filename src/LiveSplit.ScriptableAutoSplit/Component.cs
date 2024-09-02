@@ -41,7 +41,7 @@ public class ASLComponent : LogicComponent
         {
             await Task.Delay(200);
             _do_reload = true;
-        };
+        }
 
         _fs_watcher.Changed += handler;
         _fs_watcher.Renamed += handler;
@@ -95,7 +95,6 @@ public class ASLComponent : LogicComponent
     public override void Update(IInvalidator invalidator, LiveSplitState state, float width, float height,
         LayoutMode mode)
     { }
-
 
     private void UpdateScript()
     {
@@ -184,7 +183,9 @@ public class ASLComponent : LogicComponent
     private void ScriptCleanup()
     {
         if (Script == null)
+        {
             return;
+        }
 
         try
         {
