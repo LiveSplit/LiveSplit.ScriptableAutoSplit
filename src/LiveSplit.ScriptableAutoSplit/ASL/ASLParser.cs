@@ -33,7 +33,7 @@ public class ASLParser
         ParseTreeNode methods_node = root_childs.First(x => x.Term.Name == "methodList");
         ParseTreeNode states_node = root_childs.First(x => x.Term.Name == "stateList");
 
-        var states = new Dictionary<string, List<ASLState>>();
+        var states = new Dictionary<string, List<ASLState>>(StringComparer.OrdinalIgnoreCase);
 
         foreach (ParseTreeNode state_node in states_node.ChildNodes)
         {
