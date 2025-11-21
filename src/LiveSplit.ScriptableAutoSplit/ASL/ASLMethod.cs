@@ -50,6 +50,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Windows.Forms;
 using LiveSplit.ComponentUtil;
@@ -90,6 +92,8 @@ public class CompiledScript
         parameters.ReferencedAssemblies.Add("System.Data.dll");
         parameters.ReferencedAssemblies.Add("System.Data.DataSetExtensions.dll");
         parameters.ReferencedAssemblies.Add("System.Drawing.dll");
+        parameters.ReferencedAssemblies.Add("System.Memory.dll");
+        parameters.ReferencedAssemblies.Add("System.Text.Json.dll");
         parameters.ReferencedAssemblies.Add("System.Windows.Forms.dll");
         parameters.ReferencedAssemblies.Add("System.Xml.dll");
         parameters.ReferencedAssemblies.Add("System.Xml.Linq.dll");
