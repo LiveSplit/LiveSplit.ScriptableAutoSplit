@@ -12,7 +12,7 @@ public class Factory : IComponentFactory
     public string ComponentName => "Scriptable Auto Splitter";
     public string Description => "Allows scripts written in the ASL language to define the splitting behaviour.";
     public ComponentCategory Category => ComponentCategory.Control;
-    public Version Version => Version.Parse("1.8.34");
+    public Version Version => Version.Parse("1.8.37");
 
     public string UpdateName => ComponentName;
     public string UpdateURL => "http://livesplit.org/update/";
