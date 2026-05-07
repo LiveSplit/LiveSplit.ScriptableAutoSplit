@@ -121,11 +121,14 @@
             // 
             // txtScriptPath
             // 
+            this.txtScriptPath.AllowDrop = true;
             this.txtScriptPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.txtScriptPath.Location = new System.Drawing.Point(79, 4);
             this.txtScriptPath.Name = "txtScriptPath";
             this.txtScriptPath.Size = new System.Drawing.Size(300, 20);
             this.txtScriptPath.TabIndex = 0;
+            this.txtScriptPath.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtScriptPath_DragDrop);
+            this.txtScriptPath.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtScriptPath_DragEnter);
             // 
             // flowLayoutPanel1
             // 

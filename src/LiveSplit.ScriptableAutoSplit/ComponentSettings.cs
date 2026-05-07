@@ -12,6 +12,7 @@ namespace LiveSplit.UI.Components;
 public partial class ComponentSettings : UserControl
 {
     public string ScriptPath { get; set; }
+    private readonly string _scriptExtention = ".asl";
 
     // if true, next path loaded from settings will be ignored
     private bool _ignore_next_path_setting;
@@ -420,7 +421,7 @@ public partial class ComponentSettings : UserControl
     {
         var dialog = new OpenFileDialog()
         {
-            Filter = "Auto Split Script (*.asl)|*.asl|All Files (*.*)|*.*"
+            Filter = $"Auto Split Script (*{_scriptExtention})|*{_scriptExtention}|All Files (*.*)|*.*"
         };
         if (File.Exists(ScriptPath))
         {
@@ -431,6 +432,34 @@ public partial class ComponentSettings : UserControl
         if (dialog.ShowDialog() == DialogResult.OK)
         {
             ScriptPath = txtScriptPath.Text = dialog.FileName;
+        }
+    }
+
+    private void txtScriptPath_DragDrop(object sender, DragEventArgs e)
+    {
+        string[] paths = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+        foreach (string path in paths)
+        {
+            if (Path.GetExtension(path).ToLower() != _scriptExtention)
+            {
+                continue;
+            }
+
+            txtScriptPath.Text = path;
+            ScriptPath = path;
+            break;
+        }
+    }
+
+    private void txtScriptPath_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            e.Effect = DragDropEffects.Copy;
+        }
+        else
+        {
+            e.Effect = DragDropEffects.None;
         }
     }
 
