@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Irony" Version="1.1.0" />
-    <PackageReference Include="PolySharp" Version="1.14.1" PrivateAssets="all" />
+    <PackageReference Include="Irony" Version="1.5.3" />
+    <PackageReference Include="PolySharp" Version="1.16.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
