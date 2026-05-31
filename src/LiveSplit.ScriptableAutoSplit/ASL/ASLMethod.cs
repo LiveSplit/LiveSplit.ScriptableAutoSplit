@@ -1,12 +1,12 @@
-﻿using System;
+﻿using LiveSplit.Model;
+using Microsoft.CSharp;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-
-using LiveSplit.Model;
 
 namespace LiveSplit.ASL;
 
@@ -39,7 +39,7 @@ public class ASLMethod
             { "CompilerVersion", "v4.0" }
         };
 
-        using var provider = new Microsoft.CSharp.CSharpCodeProvider(options);
+        using var provider = new CSharpCodeProvider(options);
         string user_code_start_marker = "// USER_CODE_START";
         string source = $@"
 using System;

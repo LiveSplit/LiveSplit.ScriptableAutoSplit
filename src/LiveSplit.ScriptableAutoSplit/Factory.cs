@@ -1,7 +1,6 @@
-﻿using System;
-
-using LiveSplit.Model;
+﻿using LiveSplit.Model;
 using LiveSplit.UI.Components;
+using System;
 
 [assembly: ComponentFactory(typeof(Factory))]
 
