@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Irony.Parsing;
+using LiveSplit.ComponentUtil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
-using Irony.Parsing;
-
-using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.ASL;
 
@@ -54,7 +52,7 @@ public class ASLParser
                     child_nodes[3].ChildNodes.Take(1).Select(x => (string)x.Token.Value).FirstOrDefault() ??
                     string.Empty;
                 int module_base = child_nodes[4].ChildNodes.Select(x => (int)x.Token.Value).First();
-                int[] offsets = child_nodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value).ToArray();
+                int[] offsets = [.. child_nodes[4].ChildNodes.Skip(1).Select(x => (int)x.Token.Value)];
                 var value_definition = new ASLValueDefinition()
                 {
                     Identifier = identifier,
