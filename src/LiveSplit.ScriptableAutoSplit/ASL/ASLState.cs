@@ -1,9 +1,8 @@
-﻿using System;
+﻿using LiveSplit.ComponentUtil;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
-
-using LiveSplit.ComponentUtil;
 
 namespace LiveSplit.ASL;
 
@@ -101,6 +100,6 @@ public class ASLState : ICloneable
             ((IDictionary<string, object>)clone).Add(pair);
         }
 
-        return new ASLState() { Data = clone, ValueDefinitions = new List<ASLValueDefinition>(ValueDefinitions) };
+        return new ASLState() { Data = clone, ValueDefinitions = [.. ValueDefinitions] };
     }
 }

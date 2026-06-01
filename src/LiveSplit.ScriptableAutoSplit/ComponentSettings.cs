@@ -1,11 +1,10 @@
-﻿using System;
+﻿using LiveSplit.ASL;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using System.Xml;
-
-using LiveSplit.ASL;
 
 namespace LiveSplit.UI.Components;
 
@@ -252,12 +251,12 @@ public partial class ComponentSettings : UserControl
     /// <summary>
     /// Parses custom settings, stores them and updates the checked state of already added tree nodes.
     /// </summary>
-    /// 
+    ///
     private void ParseCustomSettingsFromXml(XmlElement data)
     {
         XmlElement custom_settings_node = data["CustomSettings"];
 
-        if (custom_settings_node != null && custom_settings_node.HasChildNodes)
+        if (custom_settings_node is { HasChildNodes: true })
         {
             foreach (XmlElement element in custom_settings_node.ChildNodes)
             {
@@ -326,7 +325,7 @@ public partial class ComponentSettings : UserControl
     /// Generic update on all given nodes and their childnodes, ignoring childnodes for
     /// nodes where the Func returns false.
     /// </summary>
-    /// 
+    ///
     private void UpdateNodesInTree(Func<TreeNode, bool> func, TreeNodeCollection nodes)
     {
         foreach (TreeNode node in nodes)
@@ -344,7 +343,7 @@ public partial class ComponentSettings : UserControl
     /// value of the given Func.
     /// </summary>
     /// <param name="nodes">If nodes is null, all nodes of the custom settings tree are affected.</param>
-    /// 
+    ///
     private void UpdateNodesCheckedState(Func<ASLSetting, bool> func, TreeNodeCollection nodes = null)
     {
         nodes ??= treeCustomSettings.Nodes;
@@ -367,7 +366,7 @@ public partial class ComponentSettings : UserControl
     /// Update the checked state of all given nodes and their childnodes
     /// based on a dictionary of setting values.
     /// </summary>
-    /// 
+    ///
     private void UpdateNodesCheckedState(Dictionary<string, bool> setting_values, TreeNodeCollection nodes = null)
     {
         if (setting_values == null)
@@ -453,14 +452,7 @@ public partial class ComponentSettings : UserControl
 
     private void txtScriptPath_DragEnter(object sender, DragEventArgs e)
     {
-        if (e.Data.GetDataPresent(DataFormats.FileDrop))
-        {
-            e.Effect = DragDropEffects.Copy;
-        }
-        else
-        {
-            e.Effect = DragDropEffects.None;
-        }
+        e.Effect = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
     }
 
     // Basic Setting checked/unchecked
@@ -582,7 +574,7 @@ public partial class ComponentSettings : UserControl
 /// <summary>
 /// TreeView with fixed double-clicking on checkboxes.
 /// </summary>
-/// 
+///
 /// See also:
 /// http://stackoverflow.com/questions/17356976/treeview-with-checkboxes-not-processing-clicks-correctly
 /// http://stackoverflow.com/questions/14647216/c-sharp-treeview-ignore-double-click-only-at-checkbox

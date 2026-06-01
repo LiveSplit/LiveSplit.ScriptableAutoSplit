@@ -1,12 +1,11 @@
-﻿using System;
+﻿using LiveSplit.Model;
+using LiveSplit.Options;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
-
-using LiveSplit.Model;
-using LiveSplit.Options;
 
 namespace LiveSplit.ASL;
 
@@ -64,35 +63,33 @@ public class ASLScript
     public event EventHandler<double> RefreshRateChanged;
     public event EventHandler<string> GameVersionChanged;
 
-    private string _game_version = string.Empty;
     public string GameVersion
     {
-        get => _game_version;
+        get;
         set
         {
-            if (value != _game_version)
+            if (value != field)
             {
                 GameVersionChanged?.Invoke(this, value);
             }
 
-            _game_version = value;
+            field = value;
         }
-    }
+    } = string.Empty;
 
-    private double _refresh_rate = 1000 / 15d;
     public double RefreshRate // per sec
     {
-        get => _refresh_rate;
+        get;
         set
         {
-            if (Math.Abs(value - _refresh_rate) > 0.01)
+            if (Math.Abs(value - field) > 0.01)
             {
                 RefreshRateChanged?.Invoke(this, value);
             }
 
-            _refresh_rate = value;
+            field = value;
         }
-    }
+    } = 1000 / 15d;
 
     // public so other components (ASLVarViewer) can access
     public ASLState State { get; private set; }
