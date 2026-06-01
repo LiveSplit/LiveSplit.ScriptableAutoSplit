@@ -1,4 +1,9 @@
-﻿using System;
+﻿using Basic.Reference.Assemblies;
+using LiveSplit.Model;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,14 +11,6 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
-using Basic.Reference.Assemblies;
-
-using LiveSplit.Model;
-
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
 
 namespace LiveSplit.ASL;
 
@@ -114,7 +111,7 @@ public class ASLMethod
         byte[] assemblyBytes = assemblyStream.ToArray();
         byte[] pdbBytes = pdbStream.ToArray();
 
-        Assembly assembly = Assembly.Load(assemblyBytes, pdbBytes);
+        var assembly = Assembly.Load(assemblyBytes, pdbBytes);
         Module = assembly.ManifestModule;
 
         Type type = assembly.GetType("CompiledScript");
