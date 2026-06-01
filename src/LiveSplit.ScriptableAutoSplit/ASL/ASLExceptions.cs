@@ -34,7 +34,6 @@ public class ASLCompilerException : Exception
         var sb = new StringBuilder($"'{method.Name ?? "(no name)"}' method compilation errors:");
         foreach (CompilerError error in errors)
         {
-            error.Line += method.LineOffset;
             sb.Append($"\nLine {error.Line}, Col {error.Column}: {(error.IsWarning ? "warning" : "error")} {error.ErrorNumber}: {error.ErrorText}");
         }
 
@@ -84,8 +83,7 @@ public class ASLRuntimeException : Exception
             int frame_line = frame.GetFileLineNumber();
             if (frame_line > 0)
             {
-                int line = frame_line + frame_asl_method.LineOffset;
-                stack_trace_sb.Append($"\n   at ASL line {line} in '{frame_asl_method.Name}'");
+                stack_trace_sb.Append($"\n   at ASL line {frame_line} in '{frame_asl_method.Name}'");
             }
         }
 
