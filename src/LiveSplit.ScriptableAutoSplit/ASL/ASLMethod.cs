@@ -33,9 +33,9 @@ public class ASLMethod
             throw new ArgumentNullException(nameof(code));
         }
 
-        if (scriptLine < 1)
+        if (scriptLine < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(scriptLine), "Must be greater than or equal to 1.");
+            throw new ArgumentOutOfRangeException(nameof(scriptLine), "Must be positive.");
         }
 
         Name = name;
@@ -50,7 +50,6 @@ public class ASLMethod
             using System.Dynamic;
             using System.IO;
             using System.Linq;
-            using System.Memory;
             using System.Reflection;
             using System.Text;
             using System.Text.Json;
