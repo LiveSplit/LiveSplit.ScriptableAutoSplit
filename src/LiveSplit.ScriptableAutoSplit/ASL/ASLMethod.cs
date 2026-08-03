@@ -84,7 +84,7 @@ public class ASLMethod
 
         var compilation_options = new CSharpCompilationOptions(
             OutputKind.DynamicallyLinkedLibrary,
-            optimizationLevel: OptimizationLevel.Release,
+            optimizationLevel: OptimizationLevel.Debug,
             allowUnsafe: true);
 
         var compilation = CSharpCompilation.Create(
