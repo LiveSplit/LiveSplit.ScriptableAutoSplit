@@ -38,6 +38,12 @@ public class ASLMethod
             throw new ArgumentOutOfRangeException(nameof(scriptLine), "Must be positive.");
         }
 
+        // Maps line 0 to line 1, because '#line 0' doesn't compile.
+        if (scriptLine == 0)
+        {
+            scriptLine = 1;
+        }
+
         Name = name;
         IsEmpty = string.IsNullOrWhiteSpace(code);
         code = code.Replace("return;", "return null;"); // hack
